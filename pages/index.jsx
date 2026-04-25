@@ -249,7 +249,7 @@ export default function App() {
       // ★ 핵심: 직접 Anthropic이 아닌 우리 서버(/api/generate)로 호출 → API 키 안전
       const res=await fetch("/api/generate",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({model:"claude-sonnet-4-5-20251001",max_tokens:2000,messages:[{role:"user",content:msgContent}]})
+        body:JSON.stringify({model:"claude-sonnet-4-5",max_tokens:2000,messages:[{role:"user",content:msgContent}]})
       });
       if(!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
       const data=await res.json();
