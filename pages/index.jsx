@@ -323,7 +323,15 @@ export default function App() {
 
   return (
     <div style={{minHeight:"100vh",background:LIGHT,fontFamily:"'Malgun Gothic','Apple SD Gothic Neo',sans-serif"}}>
-      <Head><title>와튼영어스쿨 월말 리포트 생성기</title></Head>
+     <Head>
+  <title>와튼영어스쿨 AI 월말 리포트 생성기</title>
+  <meta name="description" content="학생 이름과 등급만 입력하면 AI가 30초 만에 완성!"/>
+  <meta property="og:title" content="와튼영어스쿨 AI 월말 리포트 생성기"/>
+  <meta property="og:description" content="학생 이름과 등급만 입력하면 AI가 30초 만에 완성!"/>
+  <meta property="og:image" content="https://raw.githubusercontent.com/gyorm1130-alt/Wharton-Report/main/og-image.png"/>
+  <meta property="og:url" content="https://wharton-report.vercel.app"/>
+  <meta property="og:type" content="website"/>
+</Head>
       <div style={{background:LOGO_BG,padding:"20px 0 16px",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center"}}>
         <img src={LOGO_SRC} width={100} height={100} style={{objectFit:"contain"}}/>
         <div style={{fontSize:9,letterSpacing:5,color:LOGO_GOLD,marginTop:6}}>MONTHLY PROGRESS REPORT</div>
