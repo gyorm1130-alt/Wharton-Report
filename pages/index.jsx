@@ -270,7 +270,15 @@ export default function App() {
 
   if(appStep==="setup"||editingFixed) return (
     <div style={{minHeight:"100vh",background:LIGHT,display:"flex",flexDirection:"column",alignItems:"center",padding:"32px 16px",fontFamily:"'Malgun Gothic','Apple SD Gothic Neo',sans-serif"}}>
-      <Head>   <title>와튼영어스쿨 AI 월말 리포트 생성기</title>   <meta name="description" content="학생 이름과 등급만 입력하면 AI가 커리큘럼 분석·코멘트·성취도 차트를 30초 만에 완성해드립니다."/>   <meta property="og:title" content="와튼영어스쿨 AI 월말 리포트 생성기"/>   <meta property="og:description" content="학생 이름과 등급만 입력하면 AI가 30초 만에 완성!"/>   <meta property="og:image" content="https://raw.githubusercontent.com/gyorm1130-alt/Wharton-Report/main/og-image.png"/>   <meta property="og:url" content="https://wharton-report.vercel.app"/>   <meta property="og:type" content="website"/> </Head>
+      <Head>
+  <title>와튼영어스쿨 AI 월말 리포트 생성기</title>
+  <meta name="description" content="학생 이름과 등급만 입력하면 AI가 30초 만에 완성!"/>
+  <meta property="og:title" content="와튼영어스쿨 AI 월말 리포트 생성기"/>
+  <meta property="og:description" content="학생 이름과 등급만 입력하면 AI가 30초 만에 완성!"/>
+  <meta property="og:image" content="https://raw.githubusercontent.com/gyorm1130-alt/Wharton-Report/main/og-image.png"/>
+  <meta property="og:url" content="https://wharton-report.vercel.app"/>
+  <meta property="og:type" content="website"/>
+</Head>
       <div style={{background:"#fff",borderRadius:16,padding:"28px",width:"100%",maxWidth:520,boxShadow:"0 4px 20px rgba(0,0,0,0.08)"}}>
         <div style={{display:"flex",justifyContent:"center",marginBottom:16,background:LOGO_BG,borderRadius:12,padding:"16px"}}>
           <img src={LOGO_SRC} width={100} height={100} style={{objectFit:"contain"}}/>
@@ -323,7 +331,7 @@ export default function App() {
 
   return (
     <div style={{minHeight:"100vh",background:LIGHT,fontFamily:"'Malgun Gothic','Apple SD Gothic Neo',sans-serif"}}>
-     <Head>
+      <Head>
   <title>와튼영어스쿨 AI 월말 리포트 생성기</title>
   <meta name="description" content="학생 이름과 등급만 입력하면 AI가 30초 만에 완성!"/>
   <meta property="og:title" content="와튼영어스쿨 AI 월말 리포트 생성기"/>
