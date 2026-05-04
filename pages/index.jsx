@@ -67,14 +67,14 @@ function generateReportHTML(data) {
       <span style="color:#fff;font-weight:900;font-size:12px;">${item.grade}</span>
     </td>
   </tr>`).join("");
-  const photosHTML=data.photos.length>0?`<table style="width:100%;border-collapse:collapse;margin-bottom:${data.photoAnalysis?8:0}px;"><tr>${data.photos.slice(0,3).map(p=>`<td style="padding:2px;"><img src="${p.dataUrl}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;border:1px solid #e0ddd5;display:block;"></td>`).join("")}</tr></table>`:"";
+  const photosHTML=data.photos.length>0?`<table style="width:100%;border-collapse:collapse;margin-bottom:${data.photoAnalysis?10:0}px;"><tr>${data.photos.slice(0,3).map(p=>`<td style="padding:3px;"><img src="${p.dataUrl}" style="width:100%;height:180px;object-fit:cover;border-radius:4px;border:1px solid #e0ddd5;display:block;"></td>`).join("")}</tr></table>`:"";
   // 2페이지: 사진 + 결과물 분석
   const photoSection=(data.photos.length>0||data.photoAnalysis)?`
-    <div style="page-break-before:always;padding-top:20px;">
+    <div class="page-break" style="padding-top:20px;">
       <div style="background:${N};padding:5px 11px;margin-bottom:0;"><span style="color:#fff;font-size:10px;font-weight:700;">첨부 결과물 분석</span></div>
       <div style="border:1px solid ${N};border-top:none;padding:14px;">
         ${photosHTML}
-        ${data.photoAnalysis?`<div style="font-size:12px;color:#333;line-height:1.8;margin-top:${data.photos.length?12:0}px;">${data.photoAnalysis}</div>`:""}
+        ${data.photoAnalysis?`<div style="font-size:11px;color:#333;line-height:1.7;margin-top:${data.photos.length?10:0}px;">${data.photoAnalysis}</div>`:""}
       </div>
     </div>`:"";
   const currBlock=data.curriculumLevel?`<div style="background:#f8f4eb;border:1px solid ${G};border-radius:5px;padding:7px 12px;margin-bottom:10px;">
@@ -136,7 +136,7 @@ table{border-collapse:collapse;width:100%;}
         </table>
         <div style="background:${N};padding:7px 12px;"><span style="font-size:9px;letter-spacing:3px;color:${G};font-weight:700;">TEACHER'S COMMENTS AND FEEDBACK</span></div>
         <div style="border:1px solid ${N};border-top:none;padding:14px 16px;margin-bottom:12px;">
-          <div style="font-size:12px;line-height:2.1;color:#222;white-space:pre-line;">${data.comments}</div>
+          <div style="font-size:11px;line-height:1.85;color:#222;white-space:pre-line;">${data.comments}</div>
         </div>
         ${photoSection}
         <div style="border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;align-items:center;">
@@ -262,7 +262,7 @@ export default function App() {
     const catText=catsWithGrades.map(c=>`[${c.category}] ${c.content} (평가: ${c.grade})`).join("\n");
     const hasPhotos=photos.length>0;
     const photoContent=hasPhotos?photos.map(p=>({type:"image",source:{type:"base64",media_type:p.type,data:p.dataUrl.split(",")[1]}})):[];
-    const prompt=`당신은 와튼영어스쿨의 담당 선생님입니다.\n\n[커리큘럼]\n${CURRICULUM}\n\n[학생 정보]\n이름: ${studentName} / 이름(성 제외): ${firstName}\n반: ${fixed.className} / 담당: ${fixed.teacher} / 월: ${fixed.month}\n학습태도: ${attitude} / 과제수행: ${homework}\n\n[학습 진도 및 평가]\n${catText}${hasPhotos?`\n[첨부 결과물 ${photos.length}장]`:""}\n\n순수 JSON만 출력 (마크다운 없이):\n{\n  "curriculumLevel": "현재 위치 간결하게",\n  "nextStep": "다음 달 목표",\n  "analysisItems": [\n    {"label":"학습 강점","detail":"2문장","grade":"A+"},\n    {"label":"발전 영역","detail":"2문장","grade":"B+"},\n    {"label":"권장 학습 방향","detail":"2문장","grade":"A"}\n  ],\n  "photoAnalysis": "${hasPhotos?"결과물 분석 2문장":""}",\n  "comments": "【700자 내외】① 첫 문장: '${firstName}는 이번 달에...' 또는 '${firstName}이는 이번 달에...' (성 제외, 학생 단어 금지) ② 손편지처럼 친근하고 따뜻하게 ③ 학습 성취 구체적 칭찬(과목명 활용) ④ 수업 태도·참여도 1~2문장 ⑤ 생활·인성 긍정적 면모 1문장 ⑥ 아쉬운 점 직접 언급 금지 ⑦ 응원·기대 마무리 ⑧ 마지막 줄: '${fixed.teacher} 선생님 드림' ⑨ 700자 내외"\n}`;
+    const prompt=`당신은 와튼영어스쿨의 담당 선생님입니다.\n\n[커리큘럼]\n${CURRICULUM}\n\n[학생 정보]\n이름: ${studentName} / 이름(성 제외): ${firstName}\n반: ${fixed.className} / 담당: ${fixed.teacher} / 월: ${fixed.month}\n학습태도: ${attitude} / 과제수행: ${homework}\n\n[학습 진도 및 평가]\n${catText}${hasPhotos?`\n[첨부 결과물 ${photos.length}장]`:""}\n\n순수 JSON만 출력 (마크다운 없이):\n{\n  "curriculumLevel": "현재 위치 간결하게",\n  "nextStep": "다음 달 목표",\n  "analysisItems": [\n    {"label":"학습 강점","detail":"2문장","grade":"A+"},\n    {"label":"발전 영역","detail":"2문장","grade":"B+"},\n    {"label":"권장 학습 방향","detail":"2문장","grade":"A"}\n  ],\n  "photoAnalysis": "${hasPhotos?"결과물 분석 2문장":""}",\n  "comments": "【700자 내외】① 첫 문장: '${firstName}는 이번 달에...' 또는 '${firstName}이는 이번 달에...' (성 제외, 학생 단어 금지) ② 손편지처럼 친근하고 따뜻하게 ③ 학습 성취 구체적 칭찬(과목명 활용) ④ 수업 태도·참여도 1~2문장 ⑤ 생활·인성 긍정적 면모 1문장 ⑥ 아쉬운 점 직접 언급 금지 ⑦ 응원·기대 마무리 ⑧ 마지막 줄: '${fixed.teacher} 선생님 드림' ⑨ 반드시 500자 이내로 작성할 것 (매우 중요)"\n}`;
     const msgContent=hasPhotos?[...photoContent,{type:"text",text:prompt}]:prompt;
     try {
       // ★ 핵심: 직접 Anthropic이 아닌 우리 서버(/api/generate)로 호출 → API 키 안전
@@ -563,13 +563,16 @@ function ReportView({data,onNext,onEditFixed}) {
             <div style={{border:`1px solid ${NAVY}`,borderTop:"none",padding:"14px 16px",marginBottom:12}}>
               <textarea
                 value={editableComments}
-                onChange={e=>setEditableComments(e.target.value)}
-                style={{width:"100%",fontSize:12,lineHeight:2.1,color:"#222",
+                onChange={e=>{ if(e.target.value.length<=500) setEditableComments(e.target.value); }}
+                style={{width:"100%",fontSize:12,lineHeight:1.9,color:"#222",
                   fontFamily:"'Malgun Gothic',sans-serif",
-                  border:"none",outline:"none",resize:"vertical",
-                  background:"transparent",minHeight:"180px",
+                  border:"none",outline:"none",resize:"none",
+                  background:"transparent",minHeight:"160px",
                   boxSizing:"border-box",padding:0}}
               />
+              <div style={{textAlign:"right",fontSize:10,color:editableComments.length>450?"#c00":"#aaa",marginTop:4}}>
+                {editableComments.length}/500자
+              </div>
             </div>
             {(photos.length>0||photoAnalysis)&&(
               <div style={{marginTop:16,borderTop:`2px solid ${NAVY}`,paddingTop:12}}>
