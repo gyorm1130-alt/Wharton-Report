@@ -68,11 +68,14 @@ function generateReportHTML(data) {
     </td>
   </tr>`).join("");
   const photosHTML=data.photos.length>0?`<table style="width:100%;border-collapse:collapse;margin-bottom:${data.photoAnalysis?8:0}px;"><tr>${data.photos.slice(0,3).map(p=>`<td style="padding:2px;"><img src="${p.dataUrl}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;border:1px solid #e0ddd5;display:block;"></td>`).join("")}</tr></table>`:"";
+  // 2페이지: 사진 + 결과물 분석
   const photoSection=(data.photos.length>0||data.photoAnalysis)?`
-    <div style="background:${N};padding:5px 11px;"><span style="color:#fff;font-size:10px;font-weight:700;">첨부 결과물 분석</span></div>
-    <div style="border:1px solid ${N};border-top:none;padding:10px;margin-bottom:10px;">
-      ${photosHTML}
-      ${data.photoAnalysis?`<div style="font-size:11px;color:#333;line-height:1.7;${data.photos.length?"border-top:1px solid #ece8e0;padding-top:8px;":""}">${data.photoAnalysis}</div>`:""}
+    <div style="page-break-before:always;padding-top:20px;">
+      <div style="background:${N};padding:5px 11px;margin-bottom:0;"><span style="color:#fff;font-size:10px;font-weight:700;">첨부 결과물 분석</span></div>
+      <div style="border:1px solid ${N};border-top:none;padding:14px;">
+        ${photosHTML}
+        ${data.photoAnalysis?`<div style="font-size:12px;color:#333;line-height:1.8;margin-top:${data.photos.length?12:0}px;">${data.photoAnalysis}</div>`:""}
+      </div>
     </div>`:"";
   const currBlock=data.curriculumLevel?`<div style="background:#f8f4eb;border:1px solid ${G};border-radius:5px;padding:7px 12px;margin-bottom:10px;">
     <span style="font-size:10px;color:#999;">📍 현재 커리큘럼 위치&nbsp;&nbsp;</span>
@@ -115,7 +118,6 @@ table{border-collapse:collapse;width:100%;}
         <table style="border:1px solid ${N};border-top:none;margin-bottom:10px;">${catRows}</table>
         <div style="background:${N};padding:5px 11px;"><span style="color:#fff;font-size:10px;font-weight:700;">학습 분석 리포트</span></div>
         <table style="border:1px solid ${N};border-top:none;margin-bottom:10px;">${analysisRows}</table>
-        ${photoSection}
         <table style="margin-bottom:10px;">
           <tr>
             <td style="vertical-align:top;">
@@ -136,6 +138,7 @@ table{border-collapse:collapse;width:100%;}
         <div style="border:1px solid ${N};border-top:none;padding:14px 16px;margin-bottom:12px;">
           <div style="font-size:12px;line-height:2.1;color:#222;white-space:pre-line;">${data.comments}</div>
         </div>
+        ${photoSection}
         <div style="border-top:1px solid #ddd;padding-top:10px;display:flex;justify-content:space-between;align-items:center;">
           <div style="display:flex;align-items:center;gap:8px;background:${LBG};padding:4px 10px;border-radius:6px;">
             <img src="${LOGO_SRC}" width="24" height="24" style="object-fit:contain;">
@@ -534,15 +537,7 @@ function ReportView({data,onNext,onEditFixed}) {
                 </div>
               ))}
             </div>
-            {(photos.length>0||photoAnalysis)&&<>
-              <div style={{background:NAVY,padding:"5px 12px"}}><span style={{color:"#fff",fontSize:10,fontWeight:700,letterSpacing:1}}>첨부 결과물 분석</span></div>
-              <div style={{border:`1px solid ${NAVY}`,borderTop:"none",padding:10,marginBottom:10}}>
-                {photos.length>0&&<div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(photos.length,3)},1fr)`,gap:6,marginBottom:photoAnalysis?8:0}}>
-                  {photos.map((p,i)=><img key={i} src={p.dataUrl} alt="" style={{width:"100%",aspectRatio:"4/3",objectFit:"cover",borderRadius:3,border:"1px solid #e0ddd5"}}/>)}
-                </div>}
-                {photoAnalysis&&<div style={{fontSize:11,color:"#333",lineHeight:1.7,borderTop:photos.length?"1px solid #ece8e0":"none",paddingTop:photos.length?8:0}}>{photoAnalysis}</div>}
-              </div>
-            </>}
+
             <div style={{display:"grid",gridTemplateColumns:"1fr 130px",gap:10,marginBottom:10,alignItems:"stretch"}}>
               <div style={{display:"flex",flexDirection:"column"}}>
                 <div style={{background:NAVY,padding:"4px 11px"}}><span style={{color:"#fff",fontSize:9,fontWeight:700}}>학습 성취도</span></div>
@@ -566,8 +561,31 @@ function ReportView({data,onNext,onEditFixed}) {
             </div>
             <div style={{background:NAVY,padding:"7px 12px"}}><span style={{fontSize:9,letterSpacing:3,color:GOLD,fontWeight:700}}>TEACHER'S COMMENTS AND FEEDBACK</span></div>
             <div style={{border:`1px solid ${NAVY}`,borderTop:"none",padding:"14px 16px",marginBottom:12}}>
-              <div style={{fontSize:12,lineHeight:2.1,color:"#222",whiteSpace:"pre-line"}}>{comments}</div>
+              <textarea
+                value={editableComments}
+                onChange={e=>setEditableComments(e.target.value)}
+                style={{width:"100%",fontSize:12,lineHeight:2.1,color:"#222",
+                  fontFamily:"'Malgun Gothic',sans-serif",
+                  border:"none",outline:"none",resize:"vertical",
+                  background:"transparent",minHeight:"180px",
+                  boxSizing:"border-box",padding:0}}
+              />
             </div>
+            {(photos.length>0||photoAnalysis)&&(
+              <div style={{marginTop:16,borderTop:`2px solid ${NAVY}`,paddingTop:12}}>
+                <div style={{background:NAVY,padding:"5px 12px",marginBottom:0}}>
+                  <span style={{color:"#fff",fontSize:10,fontWeight:700,letterSpacing:1}}>첨부 결과물 분석</span>
+                </div>
+                <div style={{border:`1px solid ${NAVY}`,borderTop:"none",padding:12}}>
+                  {photos.length>0&&(
+                    <div style={{display:"grid",gridTemplateColumns:`repeat(${Math.min(photos.length,3)},1fr)`,gap:8,marginBottom:photoAnalysis?12:0}}>
+                      {photos.map((p,i)=><img key={i} src={p.dataUrl} alt="" style={{width:"100%",aspectRatio:"4/3",objectFit:"cover",borderRadius:4,border:"1px solid #e0ddd5"}}/>)}
+                    </div>
+                  )}
+                  {photoAnalysis&&<div style={{fontSize:12,color:"#333",lineHeight:1.8,borderTop:photos.length?"1px solid #ece8e0":"none",paddingTop:photos.length?10:0}}>{photoAnalysis}</div>}
+                </div>
+              </div>
+            )}
             <div style={{borderTop:"1px solid #ddd",paddingTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <div style={{display:"flex",alignItems:"center",gap:8,background:LOGO_BG,padding:"4px 10px",borderRadius:6}}>
                 <img src={LOGO_SRC} width={24} height={24} style={{objectFit:"contain"}}/>
