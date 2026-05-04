@@ -222,13 +222,29 @@ export default function App() {
   const updateCatGrade=(i,v)=>setCatGrades(g=>g.map((x,j)=>j===i?v:x));
   const syncedGrades=fixed.categories.map((_,i)=>catGrades[i]||"A");
 
+  const compressImage = (file) => new Promise((res) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX = 800;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = h * MAX / w; w = MAX; }
+        if (h > MAX) { w = w * MAX / h; h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        res({name:file.name, dataUrl, type:"image/jpeg"});
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
   const handleFiles=useCallback(async(files)=>{
     const arr=Array.from(files).slice(0,6);
-    const results=await Promise.all(arr.map(f=>new Promise((res,rej)=>{
-      const r=new FileReader();
-      r.onload=e=>res({name:f.name,dataUrl:e.target.result,type:f.type});
-      r.onerror=rej;r.readAsDataURL(f);
-    })));
+    const results=await Promise.all(arr.map(f=>compressImage(f)));
     setPhotos(p=>[...p,...results].slice(0,6));
   },[]);
   const removePhoto=i=>setPhotos(p=>p.filter((_,j)=>j!==i));
@@ -430,9 +446,10 @@ export default function App() {
 function ReportView({data,onNext,onEditFixed}) {
   const {studentName,firstName,className,teacher,month,categories,attitude,homework,photos,curriculumLevel,nextStep,analysisItems,photoAnalysis,comments}=data;
   const [shareMsg,setShareMsg]=useState("");
+  const [editableComments,setEditableComments]=useState(comments);
 
   const handlePrint=()=>{
-    const html=generateReportHTML(data);
+    const html=generateReportHTML({...data,comments:editableComments});
     const blob=new Blob([html],{type:"text/html;charset=utf-8"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");
@@ -444,7 +461,7 @@ function ReportView({data,onNext,onEditFixed}) {
   const handleShare=()=>{
     const text=["【와튼영어스쿨 월말 리포트】","━━━━━━━━━━━━━━━━━",`📌 ${studentName} | ${className} | ${teacher} 선생님 | ${month}`,"","📚 학습 진도 평가",...categories.map(c=>`· [${c.category}] ${c.content}  ▶ ${c.grade||"A"}`),
       "",curriculumLevel?`📍 현재 위치: ${curriculumLevel}`:"",nextStep?`→ 다음 목표: ${nextStep}`:"","","📊 학습 분석",...analysisItems.map(a=>`· ${a.label} (${a.grade}): ${a.detail}`),"",
-      `📝 학습태도: ${attitude}  |  과제수행: ${homework}`,"","💬 선생님 코멘트",comments,"━━━━━━━━━━━━━━━━━","와튼영어스쿨 (Wharton English School)"].filter(l=>l!==undefined).join("\n");
+      `📝 학습태도: ${attitude}  |  과제수행: ${homework}`,"","💬 선생님 코멘트",editableComments,"━━━━━━━━━━━━━━━━━","와튼영어스쿨 (Wharton English School)"].filter(l=>l!==undefined).join("\n");
     try{
       const ta=document.createElement("textarea");ta.value=text;ta.style.cssText="position:fixed;top:0;left:0;opacity:0.01;font-size:16px;width:1px;height:1px;";
       document.body.appendChild(ta);ta.focus();ta.select();const ok=document.execCommand("copy");document.body.removeChild(ta);
