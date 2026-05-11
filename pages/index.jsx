@@ -62,8 +62,8 @@ function makeHTML(d) {
   const ph = d.photos.length > 0
     ? `<table style="width:100%;border-collapse:collapse;"><tr>${d.photos.slice(0, 3).map(p => `<td style="padding:4px;width:33%;"><img src="${p.url}" style="width:100%;height:200px;object-fit:cover;border-radius:6px;border:1px solid #e0ddd5;display:block;"></td>`).join("")}</tr></table>`
     : "";
-  const ps = (d.photos.length > 0 || d.pa)
-    ? `<div style="page-break-before:always;padding-top:20px;">${SH("첨부 결과물 분석","📸")}<div style="border:1px solid #ddd;border-top:none;padding:14px;border-radius:0 0 6px 6px;">${ph}${d.pa ? `<div style="font-size:12px;color:#333;line-height:1.8;background:#fafaf8;padding:12px;border-radius:6px;border-left:3px solid ${G};">${d.pa}</div>` : ""}</div></div>`
+  const ps = d.photos.length > 0
+    ? `<div style="page-break-before:always;padding-top:20px;">${SH("첨부 결과물 분석","📸")}<div style="border:1px solid #ddd;border-top:none;padding:14px;border-radius:0 0 6px 6px;">${ph}${d.pa ? `<div style="font-size:12px;color:#333;line-height:1.8;background:#fafaf8;padding:12px;border-radius:6px;border-left:3px solid ${G};margin-top:10px;">${d.pa}</div>` : ""}</div></div>`
     : "";
   const cr = d.cats.map((c, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#fafbff"};"><td style="padding:8px 12px;font-size:10px;font-weight:700;color:${N};border-right:2px solid ${G};width:115px;vertical-align:middle;">[${c.cat}]</td><td style="padding:8px 12px;font-size:11px;color:#333;line-height:1.6;">${c.cont}</td><td style="${gst2(c.grade || "A")}text-align:center;font-size:13px;width:48px;vertical-align:middle;">${c.grade || "A"}</td></tr>`).join("");
   const ar = d.anal.map((it, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#fafbff"};"><td style="padding:9px 12px;border-right:2px solid ${G};"><div style="font-size:9px;color:${G};font-weight:700;margin-bottom:3px;">${it.label}</div><div style="font-size:11px;color:#333;line-height:1.6;">${it.detail}</div></td><td style="background:${N};text-align:center;vertical-align:middle;width:44px;"><span style="color:#fff;font-weight:900;font-size:13px;">${it.grade}</span></td></tr>`).join("");
@@ -135,7 +135,7 @@ export default function App() {
       const fi = raw.indexOf("{"), la = raw.lastIndexOf("}");
       if (fi === -1 || la === -1) throw new Error("JSON없음");
       const p = JSON.parse(raw.slice(fi, la + 1));
-      setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: p.photoAnalysis || "", cmt: p.comments || "" });
+      setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: hp ? (p.photoAnalysis || "") : "", cmt: p.comments || "" });
       setCmt(p.comments || ""); setStep("report");
     } catch (e) { setErr("AI 생성 오류: " + e.message); setStep("form"); }
   };
@@ -416,7 +416,7 @@ export default function App() {
                   {cmt.length < 400 ? `⚠️ ${cmt.length}/500자 (400자 이상 필요)` : `✓ ${cmt.length}/500자`}
                 </div>
               </div>
-              {(d.photos.length > 0 || d.pa) && (
+              {d.photos.length > 0 && (
                 <div style={{ marginTop: 12, borderTop: `2px solid ${N}`, paddingTop: 10 }}>
                   <div style={{ background: `linear-gradient(135deg,${N},#1a3060)`, padding: "7px 13px", borderRadius: "6px 6px 0 0" }}>
                     <span style={{ color: G, fontSize: 10, fontWeight: 700 }}>📸 첨부 결과물 분석</span>
