@@ -128,7 +128,7 @@ export default function App() {
     const prompt = `당신은 와튼영어스쿨 담당 선생님입니다.\n[커리큘럼]\n${CUR}\n[학생정보]\n이름:${name}/성제외:${first}/반:${cls}/담당:${tchr}/월:${month}/태도:${att}/과제:${hw}\n[학습진도]\n${cwg.map(c => `[${c.cat}]${c.cont}(평가:${c.grade})`).join("\n")}${hp ? `\n[사진${photos.length}장]` : ""}\n\n순수JSON만출력:\n{"curriculumLevel":"현재위치","nextStep":"다음달목표","analysisItems":[{"label":"학습 강점","detail":"2문장","grade":"A+"},{"label":"발전 영역","detail":"2문장","grade":"B+"},{"label":"권장 학습 방향","detail":"2문장","grade":"A"}],"photoAnalysis":"${hp ? "2문장" : ""}","comments":"⚠️매우중요:반드시 한글 400자 이상 500자 이내로 작성(공백포함). 400자 미만이면 안됨. ①첫문장:'${first}는 이번 달에...' 또는 '${first}이는 이번 달에...'(성 제외, '학생' 단어 금지) ②손편지처럼 친근하고 따뜻하게 ③학습 성취 구체적 칭찬(과목명·진도내용 활용) ④수업 태도·참여도 1~2문장 ⑤생활·인성 긍정적 면모 1문장 ⑥아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 ⑦응원·기대 마무리 ⑧마지막 줄 줄바꿈 후:'${tchr} 선생님 드림' ⑨글자수 400~500자 엄수"}`;
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
+      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
       if (!res.ok) throw new Error(`API ${res.status}`);
       const data = await res.json();
       let raw = (data.content || []).map(b => b.type === "text" ? b.text : "").join("");
@@ -189,7 +189,7 @@ export default function App() {
   // ── 반 설정 ──
   if (step === "setup") return (
     <div style={{ minHeight: "100vh", background: "#f5f2ec", display: "flex", flexDirection: "column", alignItems: "center", padding: "24px 14px", fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif" }}>
-      <div style={{ background: "#fff", borderRadius: 12, padding: 20, width: "100%", maxWidth: 480, boxShadow: "0 3px 14px rgba(0,0,0,0.08)" }}>
+      <div style={{ background: "#fff", borderRadius: 12, padding: 22, width: "100%", maxWidth: 420, boxShadow: "0 4px 18px rgba(15,31,66,0.1)" }}>
         <div style={{ background: LBG, borderRadius: 8, padding: "12px", textAlign: "center", marginBottom: 12, display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
           <img src={LOGO_SRC} width={48} height={48} style={{ objectFit: "contain" }} />
           <div style={{ color: LG, fontSize: 12, fontWeight: 900, letterSpacing: 2 }}>WHARTON</div>
@@ -206,15 +206,17 @@ export default function App() {
             <label style={{ fontSize: 11, color: "#666", fontWeight: 700 }}>📚 학습 진도 항목</label>
             <button onClick={() => { setCats(c => [...c, { cat: "", cont: "" }]); setCg(g => [...g, "A"]); }} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>+ 추가</button>
           </div>
-          <div style={{ background: "#fafaf8", borderRadius: 6, padding: 8 }}>
+          <div style={{ background: "#fafaf8", borderRadius: 6, padding: 9 }}>
             {cats.map((c, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "120px 1fr auto", gap: 5, marginBottom: i < cats.length - 1 ? 7 : 0, alignItems: "start" }}>
-                <select value={c.cat} onChange={e => setCats(cs => cs.map((x, j) => j === i ? { ...x, cat: e.target.value } : x))} style={{ ...inp, padding: "6px 8px", fontSize: 11 }}>
-                  <option value="">카테고리선택</option>
-                  {CATS.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-                <textarea value={c.cont} onChange={e => setCats(cs => cs.map((x, j) => j === i ? { ...x, cont: e.target.value } : x))} style={{ ...inp, minHeight: 46, fontSize: 11, resize: "vertical" }} placeholder="진도 내용..." />
-                {i > 0 && <button onClick={() => { setCats(cs => cs.filter((_, j) => j !== i)); setCg(gs => gs.filter((_, j) => j !== i)); }} style={{ background: "#fee2e2", border: "none", borderRadius: 5, padding: "3px 5px", color: "#c00", fontSize: 11, cursor: "pointer", marginTop: 2 }}>✕</button>}
+              <div key={i} style={{ background: "#fff", border: "1px solid #ece8e0", borderRadius: 6, padding: 8, marginBottom: i < cats.length - 1 ? 7 : 0 }}>
+                <div style={{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
+                  <select value={c.cat} onChange={e => setCats(cs => cs.map((x, j) => j === i ? { ...x, cat: e.target.value } : x))} style={{ ...inp, padding: "6px 8px", fontSize: 11, flex: 1 }}>
+                    <option value="">카테고리 선택</option>
+                    {CATS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  {i > 0 && <button onClick={() => { setCats(cs => cs.filter((_, j) => j !== i)); setCg(gs => gs.filter((_, j) => j !== i)); }} style={{ background: "#fee2e2", border: "none", borderRadius: 5, padding: "5px 9px", color: "#c00", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>✕</button>}
+                </div>
+                <textarea value={c.cont} onChange={e => setCats(cs => cs.map((x, j) => j === i ? { ...x, cont: e.target.value } : x))} style={{ ...inp, minHeight: 52, fontSize: 11, resize: "vertical" }} placeholder="진도 내용을 입력하세요..." />
               </div>
             ))}
           </div>
@@ -234,13 +236,13 @@ export default function App() {
           <div style={{ color: LG, fontSize: 9, letterSpacing: 5, marginTop: 4 }}>MONTHLY PROGRESS REPORT</div>
           <div style={{ width: 32, height: 2, background: LG, margin: "5px auto 0" }} />
         </div>
-        <div style={{ background: "#fff", borderBottom: "2px solid #e8e4db", padding: "7px 14px", maxWidth: 600, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ background: "#fff", borderBottom: "2px solid #e8e4db", padding: "7px 14px", maxWidth: 480, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: 12, color: N, display: "flex", gap: 12, flexWrap: "wrap" }}>
             <span>📌 <b>{cls}</b></span><span style={{ color: "#888" }}>👩‍🏫 {tchr}선생님</span><span style={{ color: "#888" }}>📅 {month}</span>
           </div>
           <button onClick={() => setStep("setup")} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>수정</button>
         </div>
-        <div style={{ maxWidth: 600, margin: "14px auto 32px", background: "#fff", borderRadius: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.07)", padding: 20 }}>
+        <div style={{ maxWidth: 480, margin: "14px auto 32px", background: "#fff", borderRadius: 12, boxShadow: "0 4px 18px rgba(15,31,66,0.1)", padding: 22 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <div style={{ background: "#fff8e7", border: `1px solid ${G}`, borderRadius: 7, padding: "6px 8px", fontSize: 15 }}>✏️</div>
             <div><h2 style={{ fontSize: 14, fontWeight: 800, color: N, margin: 0 }}>학생 정보 입력</h2><p style={{ fontSize: 11, color: "#aaa", margin: 0 }}>이름, 등급, 과목별 평가를 입력하세요</p></div>
