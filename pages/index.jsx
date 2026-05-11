@@ -21,12 +21,12 @@ function compImg(f) {
       const i = new Image();
       i.onload = () => {
         const c = document.createElement("canvas");
-        let w = i.width, h = i.height, M = 800;
+        let w = i.width, h = i.height, M = 640;
         if (w > M) { h = h * M / w; w = M; }
         if (h > M) { w = w * M / h; h = M; }
         c.width = w; c.height = h;
         c.getContext("2d").drawImage(i, 0, 0, w, h);
-        r({ name: f.name, url: c.toDataURL("image/jpeg", 0.7), type: "image/jpeg" });
+        r({ name: f.name, url: c.toDataURL("image/jpeg", 0.55), type: "image/jpeg" });
       };
       i.src = e.target.result;
     };
@@ -111,9 +111,9 @@ export default function App() {
   const syncGrades = cats.map((_, i) => cg[i] || "A");
 
   const handleFiles = useCallback(async (files) => {
-    const arr = Array.from(files).slice(0, 6 - photos.length);
+    const arr = Array.from(files).slice(0, 3 - photos.length);
     const res = await Promise.all(arr.map(f => compImg(f)));
-    setPhotos(p => [...p, ...res].slice(0, 6));
+    setPhotos(p => [...p, ...res].slice(0, 3));
   }, [photos]);
 
   const doGen = async () => {
@@ -128,8 +128,12 @@ export default function App() {
     const prompt = `당신은 와튼영어스쿨 담당 선생님입니다.\n[커리큘럼]\n${CUR}\n[학생정보]\n이름:${name}/성제외:${first}/반:${cls}/담당:${tchr}/월:${month}/태도:${att}/과제:${hw}\n[학습진도]\n${cwg.map(c => `[${c.cat}]${c.cont}(평가:${c.grade})`).join("\n")}${hp ? `\n[사진${photos.length}장]` : ""}\n\n순수JSON만출력:\n{"curriculumLevel":"현재위치","nextStep":"다음달목표","analysisItems":[{"label":"학습 강점","detail":"2문장","grade":"A+"},{"label":"발전 영역","detail":"2문장","grade":"B+"},{"label":"권장 학습 방향","detail":"2문장","grade":"A"}],"photoAnalysis":"${hp ? "2문장" : ""}","comments":"⚠️매우중요:반드시 한글 400자 이상 500자 이내로 작성(공백포함). 400자 미만이면 안됨. ①첫문장:'${first}는 이번 달에...' 또는 '${first}이는 이번 달에...'(성 제외, '학생' 단어 금지) ②손편지처럼 친근하고 따뜻하게 ③학습 성취 구체적 칭찬(과목명·진도내용 활용) ④수업 태도·참여도 1~2문장 ⑤생활·인성 긍정적 면모 1문장 ⑥아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 ⑦응원·기대 마무리 ⑧마지막 줄 줄바꿈 후:'${tchr} 선생님 드림' ⑨글자수 400~500자 엄수"}`;
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
     try {
-      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
-      if (!res.ok) throw new Error(`API ${res.status}`);
+      const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model: "claude-sonnet-4-5-20250929", max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
+      if (!res.ok) {
+        let detail = "";
+        try { const ej = await res.json(); detail = ej.error || ej.message || JSON.stringify(ej); } catch { detail = await res.text().catch(() => ""); }
+        throw new Error(`${res.status} - ${detail.slice(0, 200)}`);
+      }
       const data = await res.json();
       let raw = (data.content || []).map(b => b.type === "text" ? b.text : "").join("");
       const fi = raw.indexOf("{"), la = raw.lastIndexOf("}");
@@ -277,7 +281,7 @@ export default function App() {
           </div>
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: N }}>📸 결과물 사진 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 최대 6장)</span></label>
+              <label style={{ fontSize: 11, fontWeight: 700, color: N }}>📸 결과물 사진 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 최대 3장)</span></label>
               <button onClick={() => fileRef.current.click()} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>+ 추가</button>
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={e => handleFiles(e.target.files)} />
@@ -289,7 +293,7 @@ export default function App() {
                     <button onClick={() => setPhotos(ps => ps.filter((_, j) => j !== i))} style={{ position: "absolute", top: 3, right: 3, background: "rgba(0,0,0,0.6)", border: "none", borderRadius: "50%", width: 18, height: 18, color: "#fff", fontSize: 10, cursor: "pointer" }}>✕</button>
                   </div>
                 ))}
-                {photos.length < 6 && <div onClick={() => fileRef.current.click()} style={{ aspectRatio: "4/3", borderRadius: 6, border: "2px dashed #ddd", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#ccc", fontSize: 22 }}>+</div>}
+                {photos.length < 3 && <div onClick={() => fileRef.current.click()} style={{ aspectRatio: "4/3", borderRadius: 6, border: "2px dashed #ddd", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#ccc", fontSize: 22 }}>+</div>}
               </div>
             ) : (
               <div onClick={() => fileRef.current.click()} style={{ border: "2px dashed #e0ddd5", borderRadius: 8, padding: 16, textAlign: "center", cursor: "pointer", color: "#ccc", background: "#fafaf8" }}>
