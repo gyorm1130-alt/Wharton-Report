@@ -34,6 +34,20 @@ function compImg(f) {
   });
 }
 
+// 등급 → 숫자 변환 (0~1)
+const g2n = g => ({ "A+":1,"A":.9,"A-":.8,"B+":.7,"B":.6,"B-":.5,"C+":.4,"C":.3,"C-":.2,"D":.1 }[g] || .5);
+// 숫자 → 등급 변환 (종합 평균용)
+const n2g = n => n >= .95 ? "A+" : n >= .85 ? "A" : n >= .75 ? "A-" : n >= .65 ? "B+" : n >= .55 ? "B" : n >= .45 ? "B-" : n >= .35 ? "C+" : n >= .25 ? "C" : n >= .15 ? "C-" : "D";
+
+// 모든 평가를 모아 종합 점수 계산 (학습태도+과제수행+모든 진도평가+모든 분석등급)
+function calcOverall(d) {
+  const scores = [g2n(d.att), g2n(d.hw)];
+  if (Array.isArray(d.cats)) d.cats.forEach(c => { if (c.grade) scores.push(g2n(c.grade)); });
+  if (Array.isArray(d.anal)) d.anal.forEach(a => { if (a.grade) scores.push(g2n(a.grade)); });
+  const avg = scores.reduce((s, v) => s + v, 0) / scores.length;
+  return { avg, grade: n2g(avg) };
+}
+
 function buildRadarSVG(d) {
   const polyPoints = scale => {
     const pts = [];
@@ -43,13 +57,12 @@ function buildRadarSVG(d) {
     }
     return pts.join(" ");
   };
-  const g2n = g => ({ "A+":1,"A":.9,"A-":.8,"B+":.7,"B":.6,"B-":.5,"C+":.4,"C":.3,"C-":.2,"D":.1 }[g] || .5);
-  const avg = (g2n(d.att) + g2n(d.hw)) / 2;
+  const { avg, grade: overall } = calcOverall(d);
   const rings = [60, 45, 30, 15].map(s => `<polygon points="${polyPoints(s)}" fill="none" stroke="#c8d4ea" stroke-width="1"/>`).join("");
   const fill = `<polygon points="${polyPoints(60 * avg)}" fill="rgba(196,168,79,0.22)" stroke="#c4a84f" stroke-width="2"/>`;
   const labels = [["종합",100,22],["참여",175,82],["성취",148,168],["과제",52,168],["태도",25,82]]
     .map(([l,x,y]) => `<text x="${x}" y="${y}" text-anchor="middle" font-size="11" fill="#0f1f42" font-family="Malgun Gothic,sans-serif">${l}</text>`).join("");
-  return `<svg viewBox="0 0 200 200" width="110" style="display:block;">${rings}${fill}${labels}<text x="100" y="108" text-anchor="middle" font-size="11" font-weight="700" fill="#c4a84f">${d.att}/${d.hw}</text></svg>`;
+  return `<svg viewBox="0 0 200 200" width="110" style="display:block;">${rings}${fill}${labels}<text x="100" y="108" text-anchor="middle" font-size="14" font-weight="900" fill="#c4a84f">${overall}</text></svg>`;
 }
 
 function makeHTML(d) {
@@ -71,7 +84,13 @@ function makeHTML(d) {
   const ac = ["A+","A","A-"].includes(d.att) ? "#2e7d32" : ["B+","B","B-"].includes(d.att) ? "#1565c0" : "#f57f17";
   const hc = ["A+","A","A-"].includes(d.hw) ? "#2e7d32" : ["B+","B","B-"].includes(d.hw) ? "#1565c0" : "#f57f17";
   const radarSVG = buildRadarSVG(d);
-  const summary = ["A+","A"].includes(d.att) && ["A+","A"].includes(d.hw) ? "우수한" : ["A+","A","A-","B+"].includes(d.att) && ["A+","A","A-","B+"].includes(d.hw) ? "양호한" : "성장 중인";
+  const { avg: overallAvg, grade: overallGrade } = calcOverall(d);
+  const summary = overallAvg >= .85 ? "우수한" : overallAvg >= .7 ? "양호한" : overallAvg >= .55 ? "안정적인" : "성장 중인";
+  const summaryMsg = overallAvg >= .85
+    ? `종합 평가 <b style="color:${N};">${overallGrade}</b>, <b style="color:${N};">${summary}</b> 학습 성취를 보이고 있어 매우 인상적입니다.`
+    : overallAvg >= .7
+    ? `종합 평가 <b style="color:${N};">${overallGrade}</b>, <b style="color:${N};">${summary}</b> 수준으로 꾸준한 학습 습관이 잘 형성되어 있습니다.`
+    : `종합 평가 <b style="color:${N};">${overallGrade}</b>, <b style="color:${N};">${summary}</b> 단계로 앞으로의 발전이 더욱 기대됩니다.`;
 
   const achievementBlock = `<div style="background:#eef1f8;border:1px solid #c8d4ea;border-radius:7px;padding:10px 14px;margin-bottom:10px;">
 <div style="font-size:9px;color:${N};font-weight:700;margin-bottom:8px;">📊 학습 성취도</div>
@@ -82,7 +101,7 @@ function makeHTML(d) {
 <td style="background:#fff;border:1px solid #d8e0ee;border-radius:6px;padding:8px 10px;text-align:center;width:50%;"><div style="font-size:9px;color:#666;margin-bottom:3px;">학습태도</div><div style="font-size:26px;font-weight:900;color:${ac};line-height:1;">${d.att}</div></td>
 <td style="background:#fff;border:1px solid #d8e0ee;border-radius:6px;padding:8px 10px;text-align:center;width:50%;"><div style="font-size:9px;color:#666;margin-bottom:3px;">과제수행</div><div style="font-size:26px;font-weight:900;color:${hc};line-height:1;">${d.hw}</div></td>
 </tr></table>
-<div style="background:#fff;border:1px solid ${G};border-left:3px solid ${G};border-radius:4px;padding:7px 10px;font-size:10.5px;color:#444;line-height:1.55;"><span style="color:${G};font-weight:700;margin-right:4px;">💬</span>두 영역 모두 <b style="color:${N};">${summary}</b> 수준이며, 꾸준한 학습 습관이 잘 형성되어 있습니다.</div>
+<div style="background:#fff;border:1px solid ${G};border-left:3px solid ${G};border-radius:4px;padding:7px 10px;font-size:10.5px;color:#444;line-height:1.55;"><span style="color:${G};font-weight:700;margin-right:4px;">💬</span>${summaryMsg}</div>
 </td></tr></table>
 </div>`;
 
@@ -125,7 +144,36 @@ export default function App() {
     const cwg = vc.map((c, i) => ({ ...c, grade: syncGrades[i] }));
     const hp = photos.length > 0;
     const pc = hp ? photos.map(p => ({ type: "image", source: { type: "base64", media_type: p.type, data: p.url.split(",")[1] } })) : [];
-    const prompt = `당신은 와튼영어스쿨 담당 선생님입니다.\n[커리큘럼]\n${CUR}\n[학생정보]\n이름:${name}/성제외:${first}/반:${cls}/담당:${tchr}/월:${month}/태도:${att}/과제:${hw}\n[학습진도]\n${cwg.map(c => `[${c.cat}]${c.cont}(평가:${c.grade})`).join("\n")}${hp ? `\n[사진${photos.length}장]` : ""}\n\n순수JSON만출력:\n{"curriculumLevel":"현재위치","nextStep":"다음달목표","analysisItems":[{"label":"학습 강점","detail":"2문장","grade":"A+"},{"label":"발전 영역","detail":"2문장","grade":"B+"},{"label":"권장 학습 방향","detail":"2문장","grade":"A"}],"photoAnalysis":"${hp ? "2문장" : ""}","comments":"⚠️매우중요:반드시 한글 400자 이상 500자 이내로 작성(공백포함). 400자 미만이면 안됨. ①첫문장:'${first}는 이번 달에...' 또는 '${first}이는 이번 달에...'(성 제외, '학생' 단어 금지) ②손편지처럼 친근하고 따뜻하게 ③학습 성취 구체적 칭찬(과목명·진도내용 활용) ④수업 태도·참여도 1~2문장 ⑤생활·인성 긍정적 면모 1문장 ⑥아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 ⑦응원·기대 마무리 ⑧마지막 줄 줄바꿈 후:'${tchr} 선생님 드림' ⑨글자수 400~500자 엄수"}`;
+    const prompt = `당신은 와튼영어스쿨 담당 선생님입니다.
+
+[와튼영어스쿨 커리큘럼 참고]
+${CUR}
+
+[중요 안내사항]
+- 문법트레이닝은 학생마다 개별 진도로 진행됩니다. 다른 학생과 비교하지 말고 ${first} 학생의 현재 진도에 집중해서 분석하세요.
+- 사진은 학생의 시험지/과제물입니다. 사진 속 빨간 표시(체크, 동그라미, 사선 등)는 선생님이 채점한 것입니다. 학생이 자기 학습한 흔적이 아닙니다.
+
+[학생 정보]
+이름: ${name} / 성 제외 호칭: ${first}
+반: ${cls} / 담당: ${tchr} / 월: ${month}
+학습태도 등급: ${att} / 과제수행 등급: ${hw}
+
+[이번 달 학습 진도 및 평가]
+${cwg.map(c => `[${c.cat}] ${c.cont} → 평가: ${c.grade}`).join("\n")}
+${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` : ""}
+
+순수 JSON만 출력 (마크다운 ```json 금지):
+{
+  "curriculumLevel": "현재 위치 - 문법트레이닝의 경우 '${first} 학생 개별 진도: [현재 단원]' 형식으로",
+  "nextStep": "다음 달 개별 목표",
+  "analysisItems": [
+    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장","grade":"A+"},
+    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장","grade":"B+"},
+    {"label":"권장 학습 방향","detail":"개별 진도 기준 다음 달 학습 전략 2문장","grade":"A"}
+  ],
+  "photoAnalysis": "${hp ? `사진 속 시험지/과제물을 다음 관점으로 분석 (3~4문장, 200자 내외):\n① 사진 속 빨간펜 채점 흔적을 보고 정답/오답을 파악\n② 어떤 유형/문법 포인트에서 정확히 맞혔는지 (구체적 강점)\n③ 어떤 유형/문법 포인트에서 틀렸는지, 어떤 약점이 보이는지 (구체적 진단)\n④ 보완을 위한 학습 방향 제안\n예시: 'be going to 구문 활용 문제에서 의문문 어순은 정확히 작성했으나, 부정형(aren't going to) 표현에서 일부 오류가 보입니다. 동사 변환 단원 복습이 필요해 보입니다.'\n절대 금지: '학생이 표시한', '학생이 체크한', '복습한 흔적' 등 학생이 표시한 것처럼 묘사하지 말 것.` : ""}",
+  "comments": "⚠️매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. ①첫문장: '${first}는 이번 달에...' 또는 '${first}이는 이번 달에...' (성 제외, '학생' 단어 금지) ②손편지처럼 친근하고 따뜻하게 ③학습 성취 구체적 칭찬 (과목명·진도내용 활용) ④수업 태도·참여도 1~2문장 ⑤생활·인성 긍정적 면모 1문장 ⑥아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 ⑦응원·기대로 마무리 ⑧마지막 줄에 줄바꿈 후 '${tchr} 선생님 드림' ⑨글자수 400~500자 엄수"
+}`;
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
     const tryModels = ["claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022"];
     let lastErr = "";
@@ -327,8 +375,7 @@ export default function App() {
       }
       return pts.join(" ");
     };
-    const g2n = g => ({ "A+": 1, "A": .9, "A-": .8, "B+": .7, "B": .6, "B-": .5, "C+": .4, "C": .3, "C-": .2, "D": .1 }[g] || .5);
-    const avg = (g2n(d.att) + g2n(d.hw)) / 2;
+    const { avg, grade: overall } = calcOverall(d);
 
     return (
       <div style={{ fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif", background: "#f0ede5", minHeight: "100vh", padding: "12px 0 32px" }}>
@@ -396,7 +443,7 @@ export default function App() {
                     {[["종합", 100, 22], ["참여", 175, 82], ["성취", 148, 168], ["과제", 52, 168], ["태도", 25, 82]].map(([l, x, y]) => (
                       <text key={l} x={x} y={y} textAnchor="middle" fontSize="11" fill={N} fontFamily="Malgun Gothic,sans-serif">{l}</text>
                     ))}
-                    <text x="100" y="108" textAnchor="middle" fontSize="11" fontWeight="700" fill={G} fontFamily="Malgun Gothic,sans-serif">{d.att}/{d.hw}</text>
+                    <text x="100" y="110" textAnchor="middle" fontSize="14" fontWeight="900" fill={G} fontFamily="Malgun Gothic,sans-serif">{overall}</text>
                   </svg>
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 8 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -411,7 +458,7 @@ export default function App() {
                     </div>
                     <div style={{ background: "#fff", border: `1px solid ${G}`, borderLeft: `3px solid ${G}`, borderRadius: 4, padding: "7px 10px", fontSize: 10.5, color: "#444", lineHeight: 1.55 }}>
                       <span style={{ color: G, fontWeight: 700, marginRight: 4 }}>💬</span>
-                      두 영역 모두 <b style={{ color: N }}>{["A+", "A"].includes(d.att) && ["A+", "A"].includes(d.hw) ? "우수한" : ["A+", "A", "A-", "B+"].includes(d.att) && ["A+", "A", "A-", "B+"].includes(d.hw) ? "양호한" : "성장 중인"}</b> 수준이며, 꾸준한 학습 습관이 잘 형성되어 있습니다.
+                      종합 평가 <b style={{ color: N }}>{overall}</b>, <b style={{ color: N }}>{avg >= .85 ? "우수한" : avg >= .7 ? "양호한" : avg >= .55 ? "안정적인" : "성장 중인"}</b> {avg >= .85 ? "학습 성취를 보이고 있어 매우 인상적입니다." : avg >= .7 ? "수준으로 꾸준한 학습 습관이 잘 형성되어 있습니다." : avg >= .55 ? "단계로 점진적 향상이 기대됩니다." : "단계로 앞으로의 발전이 더욱 기대됩니다."}
                     </div>
                   </div>
                 </div>
