@@ -159,7 +159,9 @@ ${CUR}
 
 [중요 안내사항]
 - 문법트레이닝은 학생마다 개별 진도로 진행됩니다. 다른 학생과 비교하지 말고 ${first} 학생의 현재 진도에 집중해서 분석하세요.
-- 사진은 학생의 시험지/과제물입니다. 사진 속 빨간 표시(체크, 동그라미, 사선 등)는 선생님이 채점한 것입니다. 학생이 자기 학습한 흔적이 아닙니다.
+- 첨부된 자료는 선생님이 이미 채점을 마친 ${first} 학생의 결과물입니다. 자료 자체나 채점 표시(빨간 원·체크 등)는 절대 언급하지 마세요.
+- photoAnalysis는 자료를 보고 "${first} 학생이 어떤 개념을 정확히 이해하고 있고, 어떤 개념이 약한지"만 자연스럽게 진단합니다.
+- "사진", "문제지", "빨간 원", "체크", "표시" 같은 메타 표현은 photoAnalysis에서 절대 사용하지 마세요. 이 단어가 하나라도 들어가면 안 됩니다.
 
 [학생 정보]
 이름: ${name} / 성 제외 호칭: ${first}
@@ -179,7 +181,7 @@ ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` 
     {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장","grade":"B+"},
     {"label":"권장 학습 방향","detail":"개별 진도 기준 다음 달 학습 전략 2문장","grade":"A"}
   ],
-  "photoAnalysis": "${hp ? `사진 속 시험지/과제물을 다음 관점으로 분석 (3~4문장, 200자 내외):\n① 사진 속 빨간펜 채점 흔적을 보고 정답/오답을 파악\n② 어떤 유형/문법 포인트에서 정확히 맞혔는지 (구체적 강점)\n③ 어떤 유형/문법 포인트에서 틀렸는지, 어떤 약점이 보이는지 (구체적 진단)\n④ 보완을 위한 학습 방향 제안\n예시: 'be going to 구문 활용 문제에서 의문문 어순은 정확히 작성했으나, 부정형(aren't going to) 표현에서 일부 오류가 보입니다. 동사 변환 단원 복습이 필요해 보입니다.'\n절대 금지: '학생이 표시한', '학생이 체크한', '복습한 흔적' 등 학생이 표시한 것처럼 묘사하지 말 것.` : ""}",
+  "photoAnalysis": "${hp ? `첨부된 자료를 보고 ${first} 학생의 학습 이해도를 진단하세요. 다음 규칙을 엄격히 지킵니다.\n\n[필수 작성 형식 - 4~5문장, 250자 내외]\n① 정확하게 이해하고 있는 문법/개념 포인트 (1~2문장, 구체적인 문법 용어 사용)\n② 헷갈리거나 약한 부분 = 어떤 개념을 더 보강해야 하는지 (1~2문장, 구체적 진단)\n③ 다음 학습 방향 제안 (1문장)\n\n[엄격 금지 표현 - 절대 사용 금지]\n🚫 '사진 속', '사진에서', '사진을 보면', '첨부된 사진', '문제지에는', '활동지에서'\n🚫 '빨간 원', '빨간색', '빨간펜', '체크되어 있', '표시되어 있', '동그라미', '채점된'\n🚫 '학생이 표시한', '학생이 체크한', '복습한 흔적', '학습한 흔적'\n🚫 메타적으로 자료 자체를 설명하는 모든 표현\n\n[좋은 예시]\n✅ 'be동사의 긍정문과 의문문 어순은 완벽하게 익혔습니다. 다만 현재진행형의 부정문(isn't/aren't)에서 주어-동사 일치가 흔들리는 패턴이 보입니다. be동사 단원과 연결지어 한 번 더 점검하면 좋겠습니다.'\n\n[나쁜 예시 - 절대 이렇게 쓰지 말 것]\n❌ '사진 속 문법 문제지에는 be동사와 현재진행형 문제들이 빨간 원으로 체크되어 있으며...'\n❌ '빨간펜으로 체크된 부분을 보면...'\n❌ '학생이 빨간 동그라미로 표시한...'` : ""}",
   "comments": "⚠️매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. ①첫문장: '${first}는 이번 달에...' 또는 '${first}이는 이번 달에...' (성 제외, '학생' 단어 금지) ②손편지처럼 친근하고 따뜻하게 ③학습 성취 구체적 칭찬 (과목명·진도내용 활용) ④수업 태도·참여도 1~2문장 ⑤생활·인성 긍정적 면모 1문장 ⑥아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 ⑦응원·기대로 마무리 ⑧마지막 줄에 줄바꿈 후 '${tchr} 선생님 드림' ⑨글자수 400~500자 엄수"
 }`;
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
@@ -325,7 +327,7 @@ ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` 
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: N }}>📋 과목별 학습 진도 평가</label>
-              <span style={{ fontSize: 9, color: "#999" }}>💡 진도 내용을 클릭하면 이 학생만 수정 가능</span>
+              <span style={{ fontSize: 9, color: G, fontWeight: 600 }}>💡 진도 박스 클릭 = 학생별 수정</span>
             </div>
             <div style={{ border: "1.5px solid #e0ddd5", borderRadius: 8, overflow: "hidden" }}>
               {cats.filter(c => c.cat).map((c, i) => {
@@ -334,11 +336,15 @@ ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` 
                 const isOverridden = progOverride[realIdx] !== undefined && progOverride[realIdx] !== c.cont;
                 const isEditing = editIdx === realIdx;
                 return (
-                  <div key={realIdx} style={{ display: "grid", gridTemplateColumns: "1fr 95px", borderBottom: i < cats.filter(x => x.cat).length - 1 ? "1px solid #ece8e0" : "none", background: i % 2 === 0 ? "#fff" : "#fafaf8" }}>
+                  <div key={realIdx} style={{ display: "grid", gridTemplateColumns: "1fr 95px", borderBottom: i < cats.filter(x => x.cat).length - 1 ? "1px solid #ece8e0" : "none", background: isOverridden ? "#fffbef" : (i % 2 === 0 ? "#fff" : "#fafaf8") }}>
                     <div style={{ padding: "8px 11px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4, flexWrap: "wrap" }}>
                         <div style={{ fontSize: 10, fontWeight: 700, color: N }}>[{c.cat}]</div>
-                        {isOverridden && <span style={{ fontSize: 8, color: G, background: "#fff8e7", border: `1px solid ${G}`, borderRadius: 3, padding: "1px 4px", fontWeight: 700 }}>개별</span>}
+                        {isOverridden ? (
+                          <span style={{ fontSize: 9, color: "#fff", background: G, borderRadius: 3, padding: "2px 6px", fontWeight: 800 }}>🧑‍🎓 개별 진도</span>
+                        ) : (
+                          <span style={{ fontSize: 9, color: "#999", background: "#f0f0f0", borderRadius: 3, padding: "2px 6px", fontWeight: 600 }}>반 공통</span>
+                        )}
                       </div>
                       {isEditing ? (
                         <textarea
@@ -347,15 +353,16 @@ ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` 
                           onChange={e => setProgOverride(o => ({ ...o, [realIdx]: e.target.value }))}
                           onBlur={() => setEditIdx(-1)}
                           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); setEditIdx(-1); } if (e.key === "Escape") setEditIdx(-1); }}
-                          style={{ width: "100%", fontSize: 10, color: "#333", lineHeight: 1.4, border: `1.5px solid ${G}`, borderRadius: 4, padding: "4px 6px", outline: "none", fontFamily: "inherit", resize: "vertical", minHeight: 38, background: "#fffef5" }}
+                          style={{ width: "100%", fontSize: 10.5, color: "#333", lineHeight: 1.5, border: `1.5px solid ${G}`, borderRadius: 4, padding: "5px 7px", outline: "none", fontFamily: "inherit", resize: "vertical", minHeight: 42, background: "#fffef5" }}
                         />
                       ) : (
-                        <div onClick={() => setEditIdx(realIdx)} style={{ fontSize: 10, color: "#666", lineHeight: 1.4, cursor: "pointer", padding: "3px 5px", borderRadius: 4, border: "1px dashed transparent", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fffef5"; e.currentTarget.style.borderColor = "#e8dcb5"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}>
-                          {displayCont} <span style={{ color: G, fontSize: 9, marginLeft: 3 }}>✏️</span>
+                        <div onClick={() => setEditIdx(realIdx)} style={{ fontSize: 10.5, color: "#333", lineHeight: 1.5, cursor: "pointer", padding: "4px 7px", borderRadius: 4, border: "1px dashed #d4d0c8", background: "#fff", transition: "all 0.15s", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6 }} onMouseEnter={e => { e.currentTarget.style.background = "#fffef5"; e.currentTarget.style.borderColor = G; }} onMouseLeave={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.borderColor = "#d4d0c8"; }}>
+                          <span style={{ flex: 1 }}>{displayCont}</span>
+                          <span style={{ color: G, fontSize: 10, fontWeight: 700, flexShrink: 0 }}>✏️ 수정</span>
                         </div>
                       )}
                       {isOverridden && !isEditing && (
-                        <button onClick={() => setProgOverride(o => { const n = { ...o }; delete n[realIdx]; return n; })} style={{ marginTop: 3, fontSize: 8, background: "none", border: "none", color: "#999", cursor: "pointer", padding: 0, textDecoration: "underline" }}>↩️ 반 공통으로 되돌리기</button>
+                        <button onClick={() => setProgOverride(o => { const n = { ...o }; delete n[realIdx]; return n; })} style={{ marginTop: 5, fontSize: 10, background: "#fff", border: `1.5px solid ${G}`, color: G, borderRadius: 5, padding: "3px 9px", cursor: "pointer", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 3 }}>↩️ 반 공통으로 되돌리기</button>
                       )}
                     </div>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 6, borderLeft: "1px solid #ece8e0" }}>
