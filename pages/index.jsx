@@ -125,9 +125,13 @@ export default function App() {
   const [rpt, setRpt] = useState(null);
   const [err, setErr] = useState("");
   const [cmt, setCmt] = useState("");
+  const [progOverride, setProgOverride] = useState({}); // 학생별 진도 오버라이드 {인덱스: "수정된 진도내용"}
+  const [editIdx, setEditIdx] = useState(-1); // 편집 중인 진도 인덱스 (-1이면 편집 없음)
   const fileRef = useRef();
 
   const syncGrades = cats.map((_, i) => cg[i] || "A");
+  // 실제 사용할 진도 내용 (오버라이드 있으면 그것, 없으면 반 공통)
+  const getContent = (i, defaultCont) => progOverride[i] !== undefined ? progOverride[i] : defaultCont;
 
   const handleFiles = useCallback(async (files) => {
     const arr = Array.from(files).slice(0, 3 - photos.length);
@@ -137,11 +141,15 @@ export default function App() {
 
   const doGen = async () => {
     if (!name.trim()) { setErr("학생 이름을 입력해주세요."); return; }
-    const vc = cats.filter(c => c.cat && c.cont.trim());
+    // 반 공통 진도에 학생별 오버라이드 적용
+    const catsWithOverride = cats.map((c, i) => ({ ...c, cont: getContent(i, c.cont) }));
+    const vc = catsWithOverride.filter(c => c.cat && c.cont.trim());
     if (!vc.length) { setErr("학습 진도를 최소 1개 입력해주세요."); return; }
     setErr(""); setStep("generating");
     const first = fn(name);
-    const cwg = vc.map((c, i) => ({ ...c, grade: syncGrades[i] }));
+    // 평가 등급도 같이 매핑
+    const validIndices = cats.map((c, i) => ({ c, i })).filter(({ c }, idx) => c.cat && getContent(idx, c.cont).trim()).map(({ i }) => i);
+    const cwg = vc.map((c, idx) => ({ ...c, grade: cg[validIndices[idx]] || "A" }));
     const hp = photos.length > 0;
     const pc = hp ? photos.map(p => ({ type: "image", source: { type: "base64", media_type: p.type, data: p.url.split(",")[1] } })) : [];
     const prompt = `당신은 와튼영어스쿨 담당 선생님입니다.
@@ -315,21 +323,49 @@ ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` 
               <select value={hw} onChange={e => setHw(e.target.value)} style={{ ...inp, fontSize: 13, fontWeight: 700, color: N }}>{GRS.map(g => <option key={g}>{g}</option>)}</select></div>
           </div>
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: N, display: "block", marginBottom: 5 }}>📋 과목별 학습 진도 평가</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: N }}>📋 과목별 학습 진도 평가</label>
+              <span style={{ fontSize: 9, color: "#999" }}>💡 진도 내용을 클릭하면 이 학생만 수정 가능</span>
+            </div>
             <div style={{ border: "1.5px solid #e0ddd5", borderRadius: 8, overflow: "hidden" }}>
-              {cats.filter(c => c.cat).map((c, i) => (
-                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 95px", borderBottom: i < cats.filter(x => x.cat).length - 1 ? "1px solid #ece8e0" : "none", background: i % 2 === 0 ? "#fff" : "#fafaf8" }}>
-                  <div style={{ padding: "8px 11px" }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: N, marginBottom: 1 }}>[{c.cat}]</div>
-                    <div style={{ fontSize: 10, color: "#666", lineHeight: 1.4 }}>{c.cont}</div>
+              {cats.filter(c => c.cat).map((c, i) => {
+                const realIdx = cats.findIndex((cc, j) => cc === c);
+                const displayCont = getContent(realIdx, c.cont);
+                const isOverridden = progOverride[realIdx] !== undefined && progOverride[realIdx] !== c.cont;
+                const isEditing = editIdx === realIdx;
+                return (
+                  <div key={realIdx} style={{ display: "grid", gridTemplateColumns: "1fr 95px", borderBottom: i < cats.filter(x => x.cat).length - 1 ? "1px solid #ece8e0" : "none", background: i % 2 === 0 ? "#fff" : "#fafaf8" }}>
+                    <div style={{ padding: "8px 11px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 2 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: N }}>[{c.cat}]</div>
+                        {isOverridden && <span style={{ fontSize: 8, color: G, background: "#fff8e7", border: `1px solid ${G}`, borderRadius: 3, padding: "1px 4px", fontWeight: 700 }}>개별</span>}
+                      </div>
+                      {isEditing ? (
+                        <textarea
+                          autoFocus
+                          value={displayCont}
+                          onChange={e => setProgOverride(o => ({ ...o, [realIdx]: e.target.value }))}
+                          onBlur={() => setEditIdx(-1)}
+                          onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); setEditIdx(-1); } if (e.key === "Escape") setEditIdx(-1); }}
+                          style={{ width: "100%", fontSize: 10, color: "#333", lineHeight: 1.4, border: `1.5px solid ${G}`, borderRadius: 4, padding: "4px 6px", outline: "none", fontFamily: "inherit", resize: "vertical", minHeight: 38, background: "#fffef5" }}
+                        />
+                      ) : (
+                        <div onClick={() => setEditIdx(realIdx)} style={{ fontSize: 10, color: "#666", lineHeight: 1.4, cursor: "pointer", padding: "3px 5px", borderRadius: 4, border: "1px dashed transparent", transition: "all 0.15s" }} onMouseEnter={e => { e.currentTarget.style.background = "#fffef5"; e.currentTarget.style.borderColor = "#e8dcb5"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "transparent"; }}>
+                          {displayCont} <span style={{ color: G, fontSize: 9, marginLeft: 3 }}>✏️</span>
+                        </div>
+                      )}
+                      {isOverridden && !isEditing && (
+                        <button onClick={() => setProgOverride(o => { const n = { ...o }; delete n[realIdx]; return n; })} style={{ marginTop: 3, fontSize: 8, background: "none", border: "none", color: "#999", cursor: "pointer", padding: 0, textDecoration: "underline" }}>↩️ 반 공통으로 되돌리기</button>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 6, borderLeft: "1px solid #ece8e0" }}>
+                      <select value={syncGrades[realIdx]} onChange={e => { const ng = [...cg]; ng[realIdx] = e.target.value; setCg(ng); }} style={{ ...gst(syncGrades[realIdx]), padding: "5px 6px", borderRadius: 6, fontSize: 12, fontWeight: 900, cursor: "pointer", outline: "none", width: "100%", textAlign: "center", border: `1.5px solid ${gcol(syncGrades[realIdx])}44`, fontFamily: "inherit" }}>
+                        {GRS.map(g => <option key={g}>{g}</option>)}
+                      </select>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: 6, borderLeft: "1px solid #ece8e0" }}>
-                    <select value={syncGrades[i]} onChange={e => { const ng = [...cg]; ng[i] = e.target.value; setCg(ng); }} style={{ ...gst(syncGrades[i]), padding: "5px 6px", borderRadius: 6, fontSize: 12, fontWeight: 900, cursor: "pointer", outline: "none", width: "100%", textAlign: "center", border: `1.5px solid ${gcol(syncGrades[i])}44`, fontFamily: "inherit" }}>
-                      {GRS.map(g => <option key={g}>{g}</option>)}
-                    </select>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
@@ -380,7 +416,7 @@ ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` 
     return (
       <div style={{ fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif", background: "#f0ede5", minHeight: "100vh", padding: "12px 0 32px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto 6px", display: "flex", gap: 5, padding: "0 8px", flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
+          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setProgOverride({}); setEditIdx(-1); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
           <button onClick={doShare} style={{ padding: "6px 12px", background: G, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>📋 텍스트 복사</button>
