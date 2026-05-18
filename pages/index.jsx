@@ -152,6 +152,13 @@ export default function App() {
     const cwg = vc.map((c, idx) => ({ ...c, grade: cg[validIndices[idx]] || "A" }));
     const hp = photos.length > 0;
     const pc = hp ? photos.map(p => ({ type: "image", source: { type: "base64", media_type: p.type, data: p.url.split(",")[1] } })) : [];
+    // 진도 텍스트를 미리 빌드 (백틱 안에 화살표 함수 직접 쓰지 않기 위해)
+    const progressLines = [];
+    for (let i = 0; i < cwg.length; i++) {
+      const c = cwg[i];
+      progressLines.push("[" + c.cat + "] " + c.cont + " (평가: " + c.grade + ")");
+    }
+    const progressText = progressLines.join("\n");
     const prompt = `당신은 와튼영어스쿨 담당 선생님입니다.
 
 [와튼영어스쿨 커리큘럼 참고]
@@ -169,7 +176,7 @@ ${CUR}
 학습태도 등급: ${att} / 과제수행 등급: ${hw}
 
 [이번 달 학습 진도 및 평가]
-${cwg.map(c => `[${c.cat}] ${c.cont} → 평가: ${c.grade}`).join("\n")}
+${progressText}
 ${hp ? `\n[첨부 사진: ${photos.length}장 - 학생의 시험지/과제물]` : ""}
 
 순수 JSON만 출력 (마크다운 ```json 금지):
