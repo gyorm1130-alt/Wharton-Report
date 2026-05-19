@@ -80,7 +80,7 @@ function makeHTML(d) {
     : "";
   const cr = d.cats.map((c, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#fafbff"};"><td style="padding:8px 12px;font-size:10px;font-weight:700;color:${N};border-right:2px solid ${G};width:115px;vertical-align:middle;">[${c.cat}]</td><td style="padding:8px 12px;font-size:11px;color:#333;line-height:1.6;">${c.cont}</td><td style="${gst2(c.grade || "A")}text-align:center;font-size:13px;width:48px;vertical-align:middle;">${c.grade || "A"}</td></tr>`).join("");
   const ar = d.anal.map((it, i) => `<tr style="background:${i % 2 === 0 ? "#fff" : "#fafbff"};"><td style="padding:9px 12px;border-right:2px solid ${G};"><div style="font-size:9px;color:${G};font-weight:700;margin-bottom:3px;">${it.label}</div><div style="font-size:11px;color:#333;line-height:1.6;">${it.detail}</div></td><td style="background:${N};text-align:center;vertical-align:middle;width:44px;"><span style="color:#fff;font-weight:900;font-size:13px;">${it.grade}</span></td></tr>`).join("");
-  const cu = d.cl ? `<div style="background:#fdf6e3;border:1px solid ${G};border-left:4px solid ${G};padding:8px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;"><span style="font-size:10px;color:#999;">📍 현재 위치</span><span style="font-size:11px;font-weight:700;color:${N};">${d.cl}</span>${d.ns ? `<span style="font-size:10px;color:${G};font-weight:600;">→ ${d.ns}</span>` : ""}</div>` : "";
+  const cu = "";
   const ac = ["A+","A","A-"].includes(d.att) ? "#2e7d32" : ["B+","B","B-"].includes(d.att) ? "#1565c0" : "#f57f17";
   const hc = ["A+","A","A-"].includes(d.hw) ? "#2e7d32" : ["B+","B","B-"].includes(d.hw) ? "#1565c0" : "#f57f17";
   const radarSVG = buildRadarSVG(d);
@@ -166,8 +166,6 @@ export default function App() {
 
     const commentsInst = "매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. (1)첫문장: '" + first + "는 이번 달에...' 또는 '" + first + "이는 이번 달에...' (성 제외, '학생' 단어 금지) (2)손편지처럼 친근하고 따뜻하게 (3)학습 성취 구체적 칭찬 (과목명·진도내용 활용) (4)수업 태도·참여도 1~2문장 (5)생활·인성 긍정적 면모 1문장 (6)아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 (7)응원·기대로 마무리 (8)마지막 줄에 줄바꿈 후 '" + tchr + " 선생님 드림' (9)글자수 400~500자 엄수";
 
-    const curLevelInst = "현재 위치 - 문법트레이닝의 경우 '" + first + " 학생 개별 진도: [현재 단원]' 형식으로";
-
     const promptParts = [];
     promptParts.push("당신은 와튼영어스쿨 담당 선생님입니다.");
     promptParts.push("");
@@ -191,8 +189,6 @@ export default function App() {
     promptParts.push("");
     promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지):");
     promptParts.push("{");
-    promptParts.push('  "curriculumLevel": "' + curLevelInst + '",');
-    promptParts.push('  "nextStep": "다음 달 개별 목표",');
     promptParts.push('  "analysisItems": [');
     promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장","grade":"A+"},');
     promptParts.push('    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장","grade":"B+"},');
@@ -250,7 +246,7 @@ export default function App() {
 
   const doShare = () => {
     const d = rpt;
-    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", d.cl ? `📍${d.cl}` : "", d.ns ? `→${d.ns}` : "", "", "📊분석", ...d.anal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
+    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...d.anal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
     try {
       const ta = document.createElement("textarea");
       ta.value = txt;
@@ -481,11 +477,6 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              {d.cl && <div style={{ background: "#fdf6e3", border: `1px solid ${G}`, borderLeft: `4px solid ${G}`, padding: "7px 12px", marginBottom: 9, display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-                <span style={{ fontSize: 10, color: "#999" }}>📍 현재 위치</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: N }}>{d.cl}</span>
-                {d.ns && <span style={{ fontSize: 10, color: G, fontWeight: 600 }}>→ {d.ns}</span>}
-              </div>}
               <SH t="학습진도평가" e="📚" />
               <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden", marginBottom: 9 }}>
                 {d.cats.map((c, i) => (
