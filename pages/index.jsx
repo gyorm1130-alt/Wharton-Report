@@ -267,7 +267,7 @@ export default function App() {
     } catch { alert("복사 실패"); }
   };
 
-  const doJpg = async () => {
+  const doJpg = async (format = "jpeg", scale = 3) => {
     const el = document.getElementById("report-capture");
     if (!el) { alert("리포트를 찾을 수 없어요."); return; }
     // html2canvas 라이브러리 동적 로딩 (한번만)
@@ -307,7 +307,7 @@ export default function App() {
 
       await new Promise(r => setTimeout(r, 150));
       const canvas = await window.html2canvas(el, {
-        scale: 2,
+        scale: scale,
         backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
@@ -328,15 +328,18 @@ export default function App() {
         elm.style.display = display;
       });
 
+      const mime = format === "png" ? "image/png" : "image/jpeg";
+      const ext = format === "png" ? "png" : "jpg";
+      const quality = format === "png" ? undefined : 0.98;
       canvas.toBlob(blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `와튼_${rpt.name}_${rpt.month}.jpg`;
+        a.download = `와튼_${rpt.name}_${rpt.month}.${ext}`;
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 3000);
-      }, "image/jpeg", 0.92);
-    } catch (e) { alert("JPG 저장 실패: " + e.message); }
+      }, mime, quality);
+    } catch (e) { alert("이미지 저장 실패: " + e.message); }
   };
 
   // ── 랜딩 ──
@@ -536,7 +539,8 @@ export default function App() {
           <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setProgOverride({}); setEditIdx(-1); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
-          <button onClick={doJpg} style={{ padding: "6px 12px", background: "#2e7d32", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ JPG 다운로드</button>
+          <button onClick={() => doJpg("png", 3)} style={{ padding: "6px 12px", background: "#1565c0", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ PNG 다운로드 (선명함)</button>
+          <button onClick={() => doJpg("jpeg", 3)} style={{ padding: "6px 12px", background: "#2e7d32", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>📷 JPG 다운로드</button>
           <button onClick={doShare} style={{ padding: "6px 12px", background: G, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>📋 텍스트 복사</button>
         </div>
         <div style={{ maxWidth: 720, margin: "0 auto 5px", padding: "0 8px" }}>
