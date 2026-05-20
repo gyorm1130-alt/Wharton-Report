@@ -5,6 +5,7 @@ export const config = {
     },
   },
 };
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -29,7 +30,14 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json(data);
+      // 자세한 에러 정보를 클라이언트에게 전달
+      console.error('Anthropic API Error:', JSON.stringify(data));
+      return res.status(response.status).json({
+        error: data.error?.message || data.error?.type || JSON.stringify(data),
+        type: data.error?.type,
+        fullError: data,
+        modelRequested: req.body?.model
+      });
     }
 
     return res.status(200).json(data);
