@@ -125,6 +125,7 @@ export default function App() {
   const [rpt, setRpt] = useState(null);
   const [err, setErr] = useState("");
   const [cmt, setCmt] = useState("");
+  const [paEdit, setPaEdit] = useState(""); // 사진 분석 편집용
   const [progOverride, setProgOverride] = useState({}); // 학생별 진도 오버라이드 {인덱스: "수정된 진도내용"}
   const [editIdx, setEditIdx] = useState(-1); // 편집 중인 진도 인덱스 (-1이면 편집 없음)
   const fileRef = useRef();
@@ -161,7 +162,7 @@ export default function App() {
     const progressText = progressLines.join("\n");
     // prompt를 일반 문자열 합치기로 (백틱 안에 백틱 들어가면 GitHub가 깨뜨림)
     const photoAnaInst = hp
-      ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문 연습입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이니 함께 다져나가요.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않습니다. 오직 학생이 학습한 내용과 이해도만 분석하세요."
+      ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[필수 어조 - 매우 중요]\\n모든 문장을 반드시 '~입니다', '~합니다', '~됩니다', '~보입니다' 같은 격식체(하십시오체)로 작성합니다.\\n절대 금지: '~해요', '~예요', '~이에요', '~네요', '~군요', '~돼요' 같은 해요체 어미 사용 금지.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문을 다룬 학습 내용입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이므로 함께 다져나가겠습니다.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않습니다. 오직 학생이 학습한 내용과 이해도만 분석하며, 반드시 격식체(~입니다)로 작성합니다."
       : "";
 
     const commentsInst = "매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. (1)첫문장: '" + first + "는 이번 달에...' 또는 '" + first + "이는 이번 달에...' (성 제외, '학생' 단어 금지) (2)손편지처럼 친근하고 따뜻하게 (3)학습 성취 구체적 칭찬 (과목명·진도내용 활용) (4)수업 태도·참여도 1~2문장 (5)생활·인성 긍정적 면모 1문장 (6)아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 (7)응원·기대로 마무리 (8)마지막 줄에 줄바꿈 후 '" + tchr + " 선생님 드림' (9)글자수 400~500자 엄수";
@@ -190,9 +191,9 @@ export default function App() {
     promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지):");
     promptParts.push("{");
     promptParts.push('  "analysisItems": [');
-    promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장","grade":"A+"},');
-    promptParts.push('    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장","grade":"B+"},');
-    promptParts.push('    {"label":"권장 학습 방향","detail":"개별 진도 기준 다음 달 학습 전략 2문장","grade":"A"}');
+    promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지)","grade":"A+"},');
+    promptParts.push('    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지)","grade":"B+"},');
+    promptParts.push('    {"label":"권장 학습 방향","detail":"개별 진도 기준 다음 달 학습 전략 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지)","grade":"A"}');
     promptParts.push('  ],');
     promptParts.push('  "photoAnalysis": "' + photoAnaInst + '",');
     promptParts.push('  "comments": "' + commentsInst + '"');
@@ -225,17 +226,17 @@ export default function App() {
           // 첫 문장만 잘라내고 안전한 안내문 추가
           const sentences = safePA.split(/(?<=[.!?])\s+/).filter(s => !bannedWords.some(w => s.includes(w)));
           safePA = sentences.length > 0
-            ? sentences.join(" ") + ` ${first}의 학습 내용을 바탕으로 강점은 더 다지고 부족한 부분은 차근차근 보완해 나가요.`
+            ? sentences.join(" ") + ` ${first}의 학습 내용을 바탕으로 강점은 더 다지고 부족한 부분은 차근차근 보완해 나가겠습니다.`
             : `${first}가 학습한 내용을 검토한 결과, 전반적으로 성실하게 임하고 있으며 부족한 부분은 다음 달 학습으로 충분히 보완 가능합니다.`;
         }
       }
       setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "" });
-      setCmt(p.comments || ""); setStep("report");
+      setCmt(p.comments || ""); setPaEdit(safePA); setStep("report");
     } catch (e) { setErr("AI 생성 오류: " + e.message); setStep("form"); }
   };
 
   const doPrint = () => {
-    const html = makeHTML({ ...rpt, cmt });
+    const html = makeHTML({ ...rpt, cmt, pa: paEdit });
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -246,7 +247,7 @@ export default function App() {
 
   const doShare = () => {
     const d = rpt;
-    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...d.anal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
+    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...d.anal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
     try {
       const ta = document.createElement("textarea");
       ta.value = txt;
@@ -539,14 +540,15 @@ export default function App() {
               </div>
               {d.photos.length > 0 && (
                 <div style={{ marginTop: 12, borderTop: `2px solid ${N}`, paddingTop: 10 }}>
-                  <div style={{ background: `linear-gradient(135deg,${N},#1a3060)`, padding: "7px 13px", borderRadius: "6px 6px 0 0" }}>
+                  <div style={{ background: `linear-gradient(135deg,${N},#1a3060)`, padding: "7px 13px", borderRadius: "6px 6px 0 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: G, fontSize: 10, fontWeight: 700 }}>📸 첨부 결과물 분석</span>
+                    <span style={{ color: "#888", fontSize: 9 }}>✏️ 클릭하여 수정 가능</span>
                   </div>
-                  <div style={{ border: "1px solid #ddd", borderTop: "none", padding: 10, borderRadius: "0 0 6px 6px" }}>
-                    {d.photos.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(d.photos.length, 3)},1fr)`, gap: 5, marginBottom: d.pa ? 8 : 0 }}>
+                  <div style={{ border: "1px solid #ddd", borderTop: "none", padding: 10, borderRadius: "0 0 6px 6px", background: "#fffef8" }}>
+                    {d.photos.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(d.photos.length, 3)},1fr)`, gap: 5, marginBottom: 8 }}>
                       {d.photos.map((p, i) => <img key={i} src={p.url} alt="" style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: 4, border: "1px solid #e0ddd5" }} />)}
                     </div>}
-                    {d.pa && <div style={{ fontSize: 11, color: "#333", lineHeight: 1.7, borderTop: d.photos.length ? "1px solid #ece8e0" : "none", paddingTop: d.photos.length ? 7 : 0 }}>{d.pa}</div>}
+                    <textarea value={paEdit} onChange={e => setPaEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.7, color: "#333", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 90, padding: 0, boxSizing: "border-box", borderTop: d.photos.length ? "1px solid #ece8e0" : "none", paddingTop: d.photos.length ? 7 : 0 }} />
                   </div>
                 </div>
               )}
