@@ -126,6 +126,7 @@ export default function App() {
   const [err, setErr] = useState("");
   const [cmt, setCmt] = useState("");
   const [paEdit, setPaEdit] = useState(""); // 사진 분석 편집용
+  const [analEdit, setAnalEdit] = useState([]); // 학습 분석 리포트 편집용
   const [progOverride, setProgOverride] = useState({}); // 학생별 진도 오버라이드 {인덱스: "수정된 진도내용"}
   const [editIdx, setEditIdx] = useState(-1); // 편집 중인 진도 인덱스 (-1이면 편집 없음)
   const fileRef = useRef();
@@ -200,7 +201,7 @@ export default function App() {
     promptParts.push("}");
     const prompt = promptParts.join("\n");
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
-    const tryModels = ["claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-sonnet-4-20250514", "claude-3-5-sonnet-20241022"];
+    const tryModels = ["claude-sonnet-4-6", "claude-sonnet-4-5", "claude-opus-4-6", "claude-haiku-4-5"];
     let lastErr = "";
     try {
       let data = null;
@@ -231,12 +232,13 @@ export default function App() {
         }
       }
       setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "" });
-      setCmt(p.comments || ""); setPaEdit(safePA); setStep("report");
+      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setStep("report");
     } catch (e) { setErr("AI 생성 오류: " + e.message); setStep("form"); }
   };
 
   const doPrint = () => {
-    const html = makeHTML({ ...rpt, cmt, pa: paEdit });
+    const finalAnal = analEdit.length ? analEdit : (rpt.anal || []);
+    const html = makeHTML({ ...rpt, cmt, pa: paEdit, anal: finalAnal });
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -247,7 +249,8 @@ export default function App() {
 
   const doShare = () => {
     const d = rpt;
-    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...d.anal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
+    const finalAnal = analEdit.length ? analEdit : (d.anal || []);
+    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...finalAnal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
     try {
       const ta = document.createElement("textarea");
       ta.value = txt;
@@ -489,12 +492,15 @@ export default function App() {
                 ))}
               </div>
               <SH t="학습 분석 리포트" e="🔍" />
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -2, marginBottom: 2 }}>
+                <span style={{ fontSize: 9, color: "#888" }}>✏️ 분석 내용 클릭하여 수정 가능</span>
+              </div>
               <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden", marginBottom: 9 }}>
-                {d.anal.map((it, i) => (
-                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 42px", borderBottom: i < d.anal.length - 1 ? "1px solid #eee" : "none", background: i % 2 === 0 ? "#fff" : "#fafbff" }}>
+                {(analEdit.length ? analEdit : d.anal).map((it, i) => (
+                  <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 42px", borderBottom: i < (analEdit.length || d.anal.length) - 1 ? "1px solid #eee" : "none", background: i % 2 === 0 ? "#fff" : "#fafbff" }}>
                     <div style={{ padding: "8px 11px", borderRight: `2px solid ${G}` }}>
-                      <div style={{ fontSize: 9, color: G, fontWeight: 700, marginBottom: 2 }}>{it.label}</div>
-                      <div style={{ fontSize: 11, color: "#333", lineHeight: 1.5 }}>{it.detail}</div>
+                      <div style={{ fontSize: 9, color: G, fontWeight: 700, marginBottom: 3 }}>{it.label}</div>
+                      <textarea value={it.detail} onChange={e => setAnalEdit(prev => { const next = (prev.length ? [...prev] : d.anal.map(a => ({ ...a }))); next[i] = { ...next[i], detail: e.target.value }; return next; })} style={{ width: "100%", fontSize: 11, color: "#333", lineHeight: 1.5, fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 44, padding: 0, boxSizing: "border-box" }} />
                     </div>
                     <div style={{ background: N, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "#fff", fontWeight: 900, fontSize: 12 }}>{it.grade}</span></div>
                   </div>
