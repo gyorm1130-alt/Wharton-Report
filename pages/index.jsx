@@ -283,6 +283,14 @@ export default function App() {
       } catch { alert("이미지 변환 라이브러리 로딩 실패. 인터넷 연결을 확인해주세요."); return; }
     }
     try {
+      // 캡처에서 제외할 요소들 (글자수 카운터, 수정 안내 등) 임시로 숨김
+      const hideEls = el.querySelectorAll('[data-no-capture="true"]');
+      const hidden = [];
+      hideEls.forEach(elm => {
+        hidden.push({ elm, display: elm.style.display });
+        elm.style.display = "none";
+      });
+
       // textarea의 값을 placeholder div로 대체해서 캡처 (textarea 스크롤 잘림 방지)
       const textareas = el.querySelectorAll("textarea");
       const replaced = [];
@@ -315,6 +323,9 @@ export default function App() {
       replaced.forEach(({ ta, div }) => {
         ta.style.display = "";
         div.remove();
+      });
+      hidden.forEach(({ elm, display }) => {
+        elm.style.display = display;
       });
 
       canvas.toBlob(blob => {
@@ -561,7 +572,7 @@ export default function App() {
                 ))}
               </div>
               <SH t="학습 분석 리포트" e="🔍" />
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: -2, marginBottom: 2 }}>
+              <div data-no-capture="true" style={{ display: "flex", justifyContent: "flex-end", marginTop: -2, marginBottom: 2 }}>
                 <span style={{ fontSize: 9, color: "#888" }}>✏️ 분석 내용 클릭하여 수정 가능</span>
               </div>
               <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden", marginBottom: 9 }}>
@@ -609,7 +620,7 @@ export default function App() {
               </div>
               <div style={{ border: "1px solid #ddd", borderTop: "none", padding: "12px 14px", marginBottom: 10, background: "#fffef8", borderRadius: "0 0 6px 6px" }}>
                 <textarea value={cmt} onChange={e => { if (e.target.value.length <= 500) setCmt(e.target.value); }} style={{ width: "100%", fontSize: 12, lineHeight: 1.9, color: "#222", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "none", background: "transparent", minHeight: 148, padding: 0, boxSizing: "border-box" }} />
-                <div style={{ textAlign: "right", fontSize: 10, marginTop: 3, color: cmt.length < 400 ? "#c00" : cmt.length > 480 ? "#e67e00" : "#2e7d32", fontWeight: 600 }}>
+                <div data-no-capture="true" style={{ textAlign: "right", fontSize: 10, marginTop: 3, color: cmt.length < 400 ? "#c00" : cmt.length > 480 ? "#e67e00" : "#2e7d32", fontWeight: 600 }}>
                   {cmt.length < 400 ? `⚠️ ${cmt.length}/500자 (400자 이상 필요)` : `✓ ${cmt.length}/500자`}
                 </div>
               </div>
@@ -617,7 +628,7 @@ export default function App() {
                 <div style={{ marginTop: 12, borderTop: `2px solid ${N}`, paddingTop: 10 }}>
                   <div style={{ background: `linear-gradient(135deg,${N},#1a3060)`, padding: "7px 13px", borderRadius: "6px 6px 0 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: G, fontSize: 10, fontWeight: 700 }}>📸 첨부 결과물 분석</span>
-                    <span style={{ color: "#888", fontSize: 9 }}>✏️ 클릭하여 수정 가능</span>
+                    <span data-no-capture="true" style={{ color: "#888", fontSize: 9 }}>✏️ 클릭하여 수정 가능</span>
                   </div>
                   <div style={{ border: "1px solid #ddd", borderTop: "none", padding: 10, borderRadius: "0 0 6px 6px", background: "#fffef8" }}>
                     {d.photos.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(d.photos.length, 3)},1fr)`, gap: 5, marginBottom: 8 }}>
