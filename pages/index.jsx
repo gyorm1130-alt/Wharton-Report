@@ -163,7 +163,7 @@ export default function App() {
     const progressText = progressLines.join("\n");
     // prompt를 일반 문자열 합치기로 (백틱 안에 백틱 들어가면 GitHub가 깨뜨림)
     const photoAnaInst = hp
-      ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[필수 어조 - 매우 중요]\\n모든 문장을 반드시 '~입니다', '~합니다', '~됩니다', '~보입니다' 같은 격식체(하십시오체)로 작성합니다.\\n절대 금지: '~해요', '~예요', '~이에요', '~네요', '~군요', '~돼요' 같은 해요체 어미 사용 금지.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문을 다룬 학습 내용입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이므로 함께 다져나가겠습니다.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않습니다. 오직 학생이 학습한 내용과 이해도만 분석하며, 반드시 격식체(~입니다)로 작성합니다."
+      ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[필수 어조 - 매우 중요]\\n모든 문장을 반드시 '~입니다', '~합니다', '~됩니다', '~보입니다' 같은 격식체(하십시오체)로 작성합니다.\\n절대 금지: '~해요', '~예요', '~이에요', '~네요', '~군요', '~돼요' 같은 해요체 어미 사용 금지.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문을 다룬 학습 내용입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이므로 함께 다져나가겠습니다.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n다음 달, 다음 학습, 향후, 앞으로 배울, 앞으로 학습할, 다음에 배울, 다음에 학습할, 다음 단원, 다음 챕터\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않으며, 다음 달이나 앞으로 배울 내용에 대해서도 절대 언급하지 않습니다. 오직 현재 학습한 내용과 이해도만 분석하며, 반드시 격식체(~입니다)로 작성합니다."
       : "";
 
     const commentsInst = "매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. (1)첫문장: '" + first + "는 이번 달에...' 또는 '" + first + "이는 이번 달에...' (성 제외, '학생' 단어 금지) (2)손편지처럼 친근하고 따뜻하게 (3)학습 성취 구체적 칭찬 (과목명·진도내용 활용) (4)수업 태도·참여도 1~2문장 (5)생활·인성 긍정적 면모 1문장 (6)아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 (7)응원·기대로 마무리 (8)마지막 줄에 줄바꿈 후 '" + tchr + " 선생님 드림' (9)글자수 400~500자 엄수";
@@ -192,16 +192,16 @@ export default function App() {
     promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지):");
     promptParts.push("{");
     promptParts.push('  "analysisItems": [');
-    promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지)","grade":"A+"},');
-    promptParts.push('    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지)","grade":"B+"},');
-    promptParts.push('    {"label":"권장 학습 방향","detail":"개별 진도 기준 다음 달 학습 전략 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지)","grade":"A"}');
+    promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"A+"},');
+    promptParts.push('    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"B+"},');
+    promptParts.push('    {"label":"권장 학습 방향","detail":"현재 진도를 기준으로 어떤 부분을 더 다지면 좋을지 학습 방향 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달·다음 학습·향후 계획·앞으로 배울 단원 등 미래 학습 내용 언급 절대 금지, 오직 현재 학습 보완 방향만 작성)","grade":"A"}');
     promptParts.push('  ],');
     promptParts.push('  "photoAnalysis": "' + photoAnaInst + '",');
     promptParts.push('  "comments": "' + commentsInst + '"');
     promptParts.push("}");
     const prompt = promptParts.join("\n");
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
-    const tryModels = ["claude-sonnet-4-6", "claude-sonnet-4-5", "claude-opus-4-6", "claude-haiku-4-5"];
+    const tryModels = ["claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5", "claude-3-5-sonnet-latest"];
     let lastErr = "";
     try {
       let data = null;
@@ -209,8 +209,9 @@ export default function App() {
         const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
         if (res.ok) { data = await res.json(); break; }
         let detail = "";
-        try { const ej = await res.json(); detail = ej.error || ej.message || JSON.stringify(ej); } catch { detail = await res.text().catch(() => ""); }
-        lastErr = `${res.status} (${model}) - ${detail.slice(0, 150)}`;
+        try { const ej = await res.json(); detail = ej.error || ej.message || ej.type || JSON.stringify(ej); } catch { detail = await res.text().catch(() => ""); }
+        lastErr = `${res.status} (${model}) - ${String(detail).slice(0, 400)}`;
+        console.error("API 에러:", lastErr);
         if (res.status !== 404 && res.status !== 400) break;
       }
       if (!data) throw new Error(lastErr || "모든 모델 호출 실패");
@@ -233,7 +234,13 @@ export default function App() {
       }
       setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "" });
       setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setStep("report");
-    } catch (e) { setErr("AI 생성 오류: " + e.message); setStep("form"); }
+    } catch (e) {
+      const fullMsg = "AI 생성 오류: " + e.message;
+      setErr(fullMsg);
+      // 자세한 에러를 alert로도 표시 (모바일/태블릿에서도 보이게)
+      alert(fullMsg);
+      setStep("form");
+    }
   };
 
   const doPrint = () => {
@@ -258,6 +265,67 @@ export default function App() {
       document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
       alert("복사됐어요! 카카오톡에 붙여넣기 하세요 😊");
     } catch { alert("복사 실패"); }
+  };
+
+  const doJpg = async () => {
+    const el = document.getElementById("report-capture");
+    if (!el) { alert("리포트를 찾을 수 없어요."); return; }
+    // html2canvas 라이브러리 동적 로딩 (한번만)
+    if (!window.html2canvas) {
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+          s.onload = resolve;
+          s.onerror = reject;
+          document.head.appendChild(s);
+        });
+      } catch { alert("이미지 변환 라이브러리 로딩 실패. 인터넷 연결을 확인해주세요."); return; }
+    }
+    try {
+      // textarea의 값을 placeholder div로 대체해서 캡처 (textarea 스크롤 잘림 방지)
+      const textareas = el.querySelectorAll("textarea");
+      const replaced = [];
+      textareas.forEach(ta => {
+        const div = document.createElement("div");
+        div.textContent = ta.value;
+        // textarea 스타일 그대로 복사
+        const cs = window.getComputedStyle(ta);
+        div.style.cssText = `font-family:${cs.fontFamily};font-size:${cs.fontSize};line-height:${cs.lineHeight};color:${cs.color};white-space:pre-wrap;word-wrap:break-word;padding:${cs.padding};margin:${cs.margin};border:${cs.border};background:${cs.background};width:${cs.width};box-sizing:border-box;`;
+        ta.style.display = "none";
+        ta.parentNode.insertBefore(div, ta);
+        replaced.push({ ta, div });
+      });
+
+      await new Promise(r => setTimeout(r, 150));
+      const canvas = await window.html2canvas(el, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: el.scrollWidth,
+        windowHeight: el.scrollHeight,
+        height: el.scrollHeight,
+        width: el.scrollWidth
+      });
+
+      // 원상복구
+      replaced.forEach(({ ta, div }) => {
+        ta.style.display = "";
+        div.remove();
+      });
+
+      canvas.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `와튼_${rpt.name}_${rpt.month}.jpg`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+      }, "image/jpeg", 0.92);
+    } catch (e) { alert("JPG 저장 실패: " + e.message); }
   };
 
   // ── 랜딩 ──
@@ -457,6 +525,7 @@ export default function App() {
           <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setProgOverride({}); setEditIdx(-1); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
+          <button onClick={doJpg} style={{ padding: "6px 12px", background: "#2e7d32", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ JPG 다운로드</button>
           <button onClick={doShare} style={{ padding: "6px 12px", background: G, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>📋 텍스트 복사</button>
         </div>
         <div style={{ maxWidth: 720, margin: "0 auto 5px", padding: "0 8px" }}>
@@ -464,7 +533,7 @@ export default function App() {
             💡 <b>인쇄:</b> HTML 저장 → 파일 열기 → 인쇄창 자동 → PDF 또는 프린터 출력
           </div>
         </div>
-        <div style={{ maxWidth: 720, margin: "0 auto", background: "#fff", boxShadow: "0 3px 18px rgba(0,0,0,0.1)", borderRadius: 4, overflow: "hidden" }}>
+        <div id="report-capture" style={{ maxWidth: 720, margin: "0 auto", background: "#fff", boxShadow: "0 3px 18px rgba(0,0,0,0.1)", borderRadius: 4, overflow: "hidden" }}>
           <div style={{ background: LBG, padding: "14px 22px 12px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
             <img src={LOGO_SRC} width={70} height={70} style={{ objectFit: "contain" }} />
             <div style={{ marginTop: 6, fontSize: 9, letterSpacing: 5, color: LG }}>WHARTON ENGLISH SCHOOL</div>
