@@ -209,9 +209,29 @@ export default function App() {
         const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
         if (res.ok) { data = await res.json(); break; }
         let detail = "";
-        try { const ej = await res.json(); detail = ej.error || ej.message || ej.type || JSON.stringify(ej); } catch { detail = await res.text().catch(() => ""); }
-        lastErr = `${res.status} (${model}) - ${String(detail).slice(0, 400)}`;
-        console.error("API 에러:", lastErr);
+        let fullJson = null;
+        try {
+          const ej = await res.json();
+          fullJson = ej;
+          // 모든 가능한 에러 필드 추출
+          if (ej.fullError) {
+            detail = JSON.stringify(ej.fullError);
+          } else if (ej.error && typeof ej.error === 'object') {
+            detail = JSON.stringify(ej.error);
+          } else if (typeof ej.error === 'string') {
+            detail = ej.error;
+          } else if (ej.message) {
+            detail = ej.message;
+          } else if (ej.type) {
+            detail = ej.type;
+          } else {
+            detail = JSON.stringify(ej);
+          }
+        } catch {
+          detail = await res.text().catch(() => "");
+        }
+        lastErr = `${res.status} (${model}) - ${String(detail).slice(0, 500)}`;
+        console.error("API 에러 상세:", lastErr, fullJson);
         if (res.status !== 404 && res.status !== 400) break;
       }
       if (!data) throw new Error(lastErr || "모든 모델 호출 실패");
@@ -299,7 +319,7 @@ export default function App() {
         div.textContent = ta.value;
         // textarea 스타일 그대로 복사
         const cs = window.getComputedStyle(ta);
-        div.style.cssText = `font-family:${cs.fontFamily};font-size:${cs.fontSize};line-height:${cs.lineHeight};color:${cs.color};white-space:pre-wrap;word-wrap:break-word;padding:${cs.padding};margin:${cs.margin};border:${cs.border};background:${cs.background};width:${cs.width};box-sizing:border-box;`;
+        div.style.cssText = `font-family:${cs.fontFamily};font-size:${cs.fontSize};font-weight:${cs.fontWeight};line-height:${cs.lineHeight};color:${cs.color};white-space:pre-wrap;word-wrap:break-word;padding:${cs.padding};margin:${cs.margin};border:${cs.border};background:${cs.background};width:${cs.width};box-sizing:border-box;-webkit-font-smoothing:antialiased;`;
         ta.style.display = "none";
         ta.parentNode.insertBefore(div, ta);
         replaced.push({ ta, div });
@@ -311,6 +331,8 @@ export default function App() {
         backgroundColor: "#ffffff",
         useCORS: true,
         logging: false,
+        imageTimeout: 0,
+        letterRendering: true,
         scrollX: 0,
         scrollY: 0,
         windowWidth: el.scrollWidth,
@@ -511,9 +533,24 @@ export default function App() {
               </div>
             )}
           </div>
-          {err && <div style={{ background: "#fff0f0", border: "1px solid #fcc", borderRadius: 7, padding: "8px 11px", color: "#c00", fontSize: 11, marginBottom: 10 }}>⚠️ {err}</div>}
+          {err && <div style={{ background: "#fff0f0", border: "1px solid #fcc", borderRadius: 7, padding: "8px 11px", color: "#c00", fontSize: 11, marginBottom: 10, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>⚠️ {err}</div>}
           <button onClick={doGen} disabled={isG} style={{ width: "100%", padding: 13, background: isG ? "#aaa" : N, color: "#fff", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 800, cursor: isG ? "not-allowed" : "pointer" }}>
             {isG ? "⏳ AI 분석 중... (30초~1분 소요)" : "✨ 월말 리포트 생성하기 →"}
+          </button>
+          <button onClick={async () => {
+            try {
+              const res = await fetch("/api/generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 50, messages: [{ role: "user", content: "안녕" }] })
+              });
+              const data = await res.json();
+              alert("🔬 API 진단 결과\n\n상태코드: " + res.status + "\n\n응답: " + JSON.stringify(data, null, 2).slice(0, 800));
+            } catch (e) {
+              alert("🔬 API 진단 실패\n\n에러: " + e.message);
+            }
+          }} style={{ width: "100%", padding: 8, background: "#fff8e7", color: "#a07c2a", border: `1px solid ${G}`, borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", marginTop: 6 }}>
+            🔬 API 진단 (디버깅용)
           </button>
         </div>
       </div>
@@ -570,7 +607,7 @@ export default function App() {
                 {d.cats.map((c, i) => (
                   <div key={i} style={{ display: "grid", gridTemplateColumns: "110px 1fr 48px", borderBottom: i < d.cats.length - 1 ? "1px solid #eee" : "none", background: i % 2 === 0 ? "#fff" : "#fafbff" }}>
                     <div style={{ padding: "7px 10px", fontSize: 10, fontWeight: 700, color: N, borderRight: `2px solid ${G}`, display: "flex", alignItems: "center" }}>[{c.cat}]</div>
-                    <div style={{ padding: "7px 10px", fontSize: 11, color: "#333", lineHeight: 1.6 }}>{c.cont}</div>
+                    <div style={{ padding: "7px 10px", fontSize: 11, color: "#1a1a1a", lineHeight: 1.6, fontWeight: 500 }}>{c.cont}</div>
                     <div style={{ ...gst(c.grade || "A"), display: "flex", alignItems: "center", justifyContent: "center", borderLeft: "1px solid #eee" }}><span style={{ fontSize: 12, fontWeight: 900 }}>{c.grade || "A"}</span></div>
                   </div>
                 ))}
@@ -584,7 +621,7 @@ export default function App() {
                   <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 42px", borderBottom: i < (analEdit.length || d.anal.length) - 1 ? "1px solid #eee" : "none", background: i % 2 === 0 ? "#fff" : "#fafbff" }}>
                     <div style={{ padding: "8px 11px", borderRight: `2px solid ${G}` }}>
                       <div style={{ fontSize: 9, color: G, fontWeight: 700, marginBottom: 3 }}>{it.label}</div>
-                      <textarea value={it.detail} onChange={e => setAnalEdit(prev => { const next = (prev.length ? [...prev] : d.anal.map(a => ({ ...a }))); next[i] = { ...next[i], detail: e.target.value }; return next; })} style={{ width: "100%", fontSize: 11, color: "#333", lineHeight: 1.5, fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 44, padding: 0, boxSizing: "border-box" }} />
+                      <textarea value={it.detail} onChange={e => setAnalEdit(prev => { const next = (prev.length ? [...prev] : d.anal.map(a => ({ ...a }))); next[i] = { ...next[i], detail: e.target.value }; return next; })} style={{ width: "100%", fontSize: 11, color: "#1a1a1a", lineHeight: 1.5, fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 44, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
                     </div>
                     <div style={{ background: N, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "#fff", fontWeight: 900, fontSize: 12 }}>{it.grade}</span></div>
                   </div>
@@ -623,7 +660,7 @@ export default function App() {
                 <span style={{ fontSize: 9, letterSpacing: 2, color: G, fontWeight: 700 }}>✍️ TEACHER'S COMMENTS AND FEEDBACK</span>
               </div>
               <div style={{ border: "1px solid #ddd", borderTop: "none", padding: "12px 14px", marginBottom: 10, background: "#fffef8", borderRadius: "0 0 6px 6px" }}>
-                <textarea value={cmt} onChange={e => { if (e.target.value.length <= 500) setCmt(e.target.value); }} style={{ width: "100%", fontSize: 12, lineHeight: 1.9, color: "#222", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "none", background: "transparent", minHeight: 148, padding: 0, boxSizing: "border-box" }} />
+                <textarea value={cmt} onChange={e => { if (e.target.value.length <= 500) setCmt(e.target.value); }} style={{ width: "100%", fontSize: 12, lineHeight: 1.9, color: "#0d0d0d", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "none", background: "transparent", minHeight: 148, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
                 <div data-no-capture="true" style={{ textAlign: "right", fontSize: 10, marginTop: 3, color: cmt.length < 400 ? "#c00" : cmt.length > 480 ? "#e67e00" : "#2e7d32", fontWeight: 600 }}>
                   {cmt.length < 400 ? `⚠️ ${cmt.length}/500자 (400자 이상 필요)` : `✓ ${cmt.length}/500자`}
                 </div>
@@ -638,7 +675,7 @@ export default function App() {
                     {d.photos.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(d.photos.length, 3)},1fr)`, gap: 5, marginBottom: 8 }}>
                       {d.photos.map((p, i) => <img key={i} src={p.url} alt="" style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: 4, border: "1px solid #e0ddd5" }} />)}
                     </div>}
-                    <textarea value={paEdit} onChange={e => setPaEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.7, color: "#333", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 90, padding: 0, boxSizing: "border-box", borderTop: d.photos.length ? "1px solid #ece8e0" : "none", paddingTop: d.photos.length ? 7 : 0 }} />
+                    <textarea value={paEdit} onChange={e => setPaEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.7, color: "#1a1a1a", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 90, padding: 0, boxSizing: "border-box", borderTop: d.photos.length ? "1px solid #ece8e0" : "none", paddingTop: d.photos.length ? 7 : 0, fontWeight: 500 }} />
                   </div>
                 </div>
               )}
