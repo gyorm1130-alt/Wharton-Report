@@ -21,12 +21,12 @@ function compImg(f) {
       const i = new Image();
       i.onload = () => {
         const c = document.createElement("canvas");
-        let w = i.width, h = i.height, M = 640;
+        let w = i.width, h = i.height, M = 480;
         if (w > M) { h = h * M / w; w = M; }
         if (h > M) { w = w * M / h; h = M; }
         c.width = w; c.height = h;
         c.getContext("2d").drawImage(i, 0, 0, w, h);
-        r({ name: f.name, url: c.toDataURL("image/jpeg", 0.55), type: "image/jpeg" });
+        r({ name: f.name, url: c.toDataURL("image/jpeg", 0.45), type: "image/jpeg" });
       };
       i.src = e.target.result;
     };
@@ -127,6 +127,7 @@ export default function App() {
   const [cmt, setCmt] = useState("");
   const [paEdit, setPaEdit] = useState(""); // 사진 분석 편집용
   const [analEdit, setAnalEdit] = useState([]); // 학습 분석 리포트 편집용
+  const [reportPhotos, setReportPhotos] = useState([]); // 리포트 화면에 표시할 사진 (분석은 유지하고 사진만 삭제 가능)
   const [progOverride, setProgOverride] = useState({}); // 학생별 진도 오버라이드 {인덱스: "수정된 진도내용"}
   const [editIdx, setEditIdx] = useState(-1); // 편집 중인 진도 인덱스 (-1이면 편집 없음)
   const fileRef = useRef();
@@ -203,6 +204,15 @@ export default function App() {
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
     const tryModels = ["claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5", "claude-3-5-sonnet-latest"];
     let lastErr = "";
+    let firstErr = "";
+    // 페이로드 크기 사전 체크 (Vercel 4.5MB 제한)
+    const payloadStr = JSON.stringify({ model: "test", max_tokens: 2000, messages: [{ role: "user", content: mc }] });
+    const payloadKB = Math.round(payloadStr.length / 1024);
+    console.log("📦 페이로드 크기:", payloadKB, "KB");
+    if (payloadStr.length > 4 * 1024 * 1024) {
+      const msg = `요청 크기가 너무 큽니다 (${payloadKB}KB). 사진을 줄이거나 빼주세요.`;
+      setErr(msg); alert(msg); setStep("form"); return;
+    }
     try {
       let data = null;
       for (const model of tryModels) {
@@ -228,13 +238,24 @@ export default function App() {
             detail = JSON.stringify(ej);
           }
         } catch {
-          detail = await res.text().catch(() => "");
+          detail = await res.text().catch(() => "(빈 응답)");
         }
-        lastErr = `${res.status} (${model}) - ${String(detail).slice(0, 500)}`;
-        console.error("API 에러 상세:", lastErr, fullJson);
-        if (res.status !== 404 && res.status !== 400) break;
+        if (!detail || detail === "{}" || detail === "(빈 응답)") {
+          // 상태코드별 추정 원인
+          if (res.status === 413) detail = "Payload Too Large - 사진 크기가 너무 큽니다";
+          else if (res.status === 504) detail = "Timeout - 응답 시간 초과";
+          else if (res.status === 502) detail = "Bad Gateway - 서버 일시 오류";
+          else if (res.status === 500) detail = "Internal Server Error - 서버 내부 오류";
+          else detail = `(빈 에러 응답) 페이로드: ${payloadKB}KB`;
+        }
+        const errMsg = `${res.status} (${model}) - ${String(detail).slice(0, 500)}`;
+        if (!firstErr) firstErr = errMsg;
+        lastErr = errMsg;
+        console.error("API 에러 상세:", errMsg, fullJson);
+        // 413, 500, 401, 429는 모델 바꿔도 안되니 즉시 중단
+        if (![404, 400].includes(res.status)) break;
       }
-      if (!data) throw new Error(lastErr || "모든 모델 호출 실패");
+      if (!data) throw new Error(firstErr || lastErr || "모든 모델 호출 실패");
       let raw = (data.content || []).map(b => b.type === "text" ? b.text : "").join("");
       const fi = raw.indexOf("{"), la = raw.lastIndexOf("}");
       if (fi === -1 || la === -1) throw new Error("JSON없음");
@@ -253,7 +274,7 @@ export default function App() {
         }
       }
       setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "" });
-      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setStep("report");
+      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setReportPhotos([...photos]); setStep("report");
     } catch (e) {
       const fullMsg = "AI 생성 오류: " + e.message;
       setErr(fullMsg);
@@ -265,7 +286,7 @@ export default function App() {
 
   const doPrint = () => {
     const finalAnal = analEdit.length ? analEdit : (rpt.anal || []);
-    const html = makeHTML({ ...rpt, cmt, pa: paEdit, anal: finalAnal });
+    const html = makeHTML({ ...rpt, cmt, pa: paEdit, anal: finalAnal, photos: reportPhotos });
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -573,7 +594,7 @@ export default function App() {
     return (
       <div style={{ fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif", background: "#f0ede5", minHeight: "100vh", padding: "12px 0 32px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto 6px", display: "flex", gap: 5, padding: "0 8px", flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setProgOverride({}); setEditIdx(-1); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
+          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
           <button onClick={() => doJpg("png", 3)} style={{ padding: "6px 12px", background: "#1565c0", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ PNG 다운로드 (선명함)</button>
@@ -665,17 +686,31 @@ export default function App() {
                   {cmt.length < 400 ? `⚠️ ${cmt.length}/500자 (400자 이상 필요)` : `✓ ${cmt.length}/500자`}
                 </div>
               </div>
-              {d.photos.length > 0 && (
+              {(reportPhotos.length > 0 || paEdit) && (
                 <div style={{ marginTop: 12, borderTop: `2px solid ${N}`, paddingTop: 10 }}>
                   <div style={{ background: `linear-gradient(135deg,${N},#1a3060)`, padding: "7px 13px", borderRadius: "6px 6px 0 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ color: G, fontSize: 10, fontWeight: 700 }}>📸 첨부 결과물 분석</span>
                     <span data-no-capture="true" style={{ color: "#888", fontSize: 9 }}>✏️ 클릭하여 수정 가능</span>
                   </div>
                   <div style={{ border: "1px solid #ddd", borderTop: "none", padding: 10, borderRadius: "0 0 6px 6px", background: "#fffef8" }}>
-                    {d.photos.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(d.photos.length, 3)},1fr)`, gap: 5, marginBottom: 8 }}>
-                      {d.photos.map((p, i) => <img key={i} src={p.url} alt="" style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: 4, border: "1px solid #e0ddd5" }} />)}
+                    {reportPhotos.length > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(reportPhotos.length, 3)},1fr)`, gap: 5, marginBottom: 8 }}>
+                      {reportPhotos.map((p, i) => (
+                        <div key={i} style={{ position: "relative" }}>
+                          <img src={p.url} alt="" style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", borderRadius: 4, border: "1px solid #e0ddd5", display: "block" }} />
+                          <button
+                            data-no-capture="true"
+                            onClick={() => {
+                              if (window.confirm("이 사진을 리포트에서 제거할까요?\n(분석 내용은 그대로 유지됩니다)")) {
+                                setReportPhotos(ps => ps.filter((_, j) => j !== i));
+                              }
+                            }}
+                            title="사진 제거 (분석은 유지)"
+                            style={{ position: "absolute", top: 4, right: 4, background: "rgba(198,40,40,0.92)", border: "2px solid #fff", borderRadius: "50%", width: 24, height: 24, color: "#fff", fontSize: 13, fontWeight: 900, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, padding: 0, boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }}
+                          >✕</button>
+                        </div>
+                      ))}
                     </div>}
-                    <textarea value={paEdit} onChange={e => setPaEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.7, color: "#1a1a1a", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 90, padding: 0, boxSizing: "border-box", borderTop: d.photos.length ? "1px solid #ece8e0" : "none", paddingTop: d.photos.length ? 7 : 0, fontWeight: 500 }} />
+                    <textarea value={paEdit} onChange={e => setPaEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.7, color: "#1a1a1a", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 90, padding: 0, boxSizing: "border-box", borderTop: reportPhotos.length ? "1px solid #ece8e0" : "none", paddingTop: reportPhotos.length ? 7 : 0, fontWeight: 500 }} />
                   </div>
                 </div>
               )}
