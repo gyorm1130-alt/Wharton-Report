@@ -232,12 +232,21 @@ export default function App() {
     promptParts.push(progressText);
     if (hp) promptParts.push("\n[첨부 사진: " + photos.length + "장 - 학생의 시험지/과제물]");
     promptParts.push("");
+    // 학생의 전체 등급 평균을 계산해서 분석 등급 자동 매칭 (A+ 학생에게 B+ 발전영역 나오는 문제 방지)
+    const allGrades = [g2n(att), g2n(hw), ...cwg.map(c => g2n(c.grade))];
+    const avgGrade = allGrades.reduce((s, v) => s + v, 0) / allGrades.length;
+    const strengthGrade = n2g(Math.min(1, avgGrade + 0.05)); // 강점은 평균보다 약간 위
+    const growthGrade = n2g(Math.max(0.1, avgGrade - 0.1));  // 발전영역은 평균보다 약간 아래 (단, 너무 떨어지지 않게)
+    const directionGrade = n2g(avgGrade); // 권장 학습 방향은 평균
+    // A+ 학생은 발전영역도 A로 (B+ 안 나오게)
+    const finalGrowthGrade = avgGrade >= 0.95 ? "A" : avgGrade >= 0.85 ? "A-" : growthGrade;
+
     promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지):");
     promptParts.push("{");
     promptParts.push('  "analysisItems": [');
-    promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"A+"},');
-    promptParts.push('    {"label":"발전 영역","detail":"상대적으로 보강이 필요한 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"B+"},');
-    promptParts.push('    {"label":"권장 학습 방향","detail":"현재 진도를 기준으로 어떤 부분을 더 다지면 좋을지 학습 방향 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달·다음 학습·향후 계획·앞으로 배울 단원 등 미래 학습 내용 언급 절대 금지, 오직 현재 학습 보완 방향만 작성)","grade":"A"}');
+    promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"' + strengthGrade + '"},');
+    promptParts.push('    {"label":"발전 영역","detail":"' + (avgGrade >= 0.85 ? '학생이 이미 우수하지만 더욱 완성도를 높일 수 있는 세부 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지, 비판 금지)' : '상대적으로 보강이 필요한 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)') + '","grade":"' + finalGrowthGrade + '"},');
+    promptParts.push('    {"label":"권장 학습 방향","detail":"현재 진도를 기준으로 어떤 부분을 더 다지면 좋을지 학습 방향 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달·다음 학습·향후 계획·앞으로 배울 단원 등 미래 학습 내용 언급 절대 금지, 오직 현재 학습 보완 방향만 작성)","grade":"' + directionGrade + '"}');
     promptParts.push('  ],');
     promptParts.push('  "photoAnalysis": "' + photoAnaInst + '",');
     promptParts.push('  "comments": "' + commentsInst + '"');
@@ -714,7 +723,7 @@ export default function App() {
               </div>
               <SH t="학습 분석 리포트" e="🔍" />
               <div data-no-capture="true" style={{ display: "flex", justifyContent: "flex-end", marginTop: -2, marginBottom: 2 }}>
-                <span style={{ fontSize: 9, color: "#888" }}>✏️ 분석 내용 클릭하여 수정 가능</span>
+                <span style={{ fontSize: 9, color: "#888" }}>✏️ 내용 클릭하여 수정 · 등급도 변경 가능</span>
               </div>
               <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden", marginBottom: 9 }}>
                 {(analEdit.length ? analEdit : d.anal).map((it, i) => (
@@ -723,7 +732,20 @@ export default function App() {
                       <div style={{ fontSize: 9, color: G, fontWeight: 700, marginBottom: 3 }}>{it.label}</div>
                       <textarea value={it.detail} onChange={e => setAnalEdit(prev => { const next = (prev.length ? [...prev] : d.anal.map(a => ({ ...a }))); next[i] = { ...next[i], detail: e.target.value }; return next; })} style={{ width: "100%", fontSize: 11, color: "#1a1a1a", lineHeight: 1.5, fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 44, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
                     </div>
-                    <div style={{ background: N, display: "flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "#fff", fontWeight: 900, fontSize: 12 }}>{it.grade}</span></div>
+                    <div style={{ background: N, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
+                      <select
+                        value={it.grade}
+                        onChange={e => setAnalEdit(prev => {
+                          const next = (prev.length ? [...prev] : d.anal.map(a => ({ ...a })));
+                          next[i] = { ...next[i], grade: e.target.value };
+                          return next;
+                        })}
+                        style={{ background: "transparent", color: "#fff", fontWeight: 900, fontSize: 12, border: "none", outline: "none", cursor: "pointer", textAlign: "center", textAlignLast: "center", width: "100%", appearance: "none", WebkitAppearance: "none", MozAppearance: "none", fontFamily: "inherit", padding: "4px 0" }}
+                        title="등급 수정"
+                      >
+                        {GRS.map(g => <option key={g} value={g} style={{ background: "#fff", color: "#000" }}>{g}</option>)}
+                      </select>
+                    </div>
                   </div>
                 ))}
               </div>
