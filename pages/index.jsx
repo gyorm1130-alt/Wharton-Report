@@ -34,6 +34,32 @@ function compImg(f) {
   });
 }
 
+// 학생별 코멘트 이력 관리 (localStorage 활용, 최대 6개월 보관)
+const CMT_HISTORY_KEY = "wharton_cmt_history";
+function getCmtHistory(studentName) {
+  if (!studentName || typeof window === "undefined") return [];
+  try {
+    const all = JSON.parse(localStorage.getItem(CMT_HISTORY_KEY) || "{}");
+    const list = all[studentName.trim()] || [];
+    return list.slice(-6); // 최근 6개월만 사용
+  } catch { return []; }
+}
+function saveCmtHistory(studentName, month, comment) {
+  if (!studentName || !comment || typeof window === "undefined") return;
+  try {
+    const all = JSON.parse(localStorage.getItem(CMT_HISTORY_KEY) || "{}");
+    const key = studentName.trim();
+    const list = all[key] || [];
+    // 같은 월이 이미 있으면 교체, 아니면 추가
+    const existIdx = list.findIndex(item => item.month === month);
+    if (existIdx >= 0) list[existIdx] = { month, comment };
+    else list.push({ month, comment });
+    // 최근 12개월만 저장 (그 이상은 자동 삭제)
+    all[key] = list.slice(-12);
+    localStorage.setItem(CMT_HISTORY_KEY, JSON.stringify(all));
+  } catch (e) { console.warn("코멘트 이력 저장 실패:", e); }
+}
+
 // 등급 → 숫자 변환 (0~1)
 const g2n = g => ({ "A+":1,"A":.9,"A-":.8,"B+":.7,"B":.6,"B-":.5,"C+":.4,"C":.3,"C-":.2,"D":.1 }[g] || .5);
 // 숫자 → 등급 변환 (종합 평균용)
@@ -122,6 +148,7 @@ export default function App() {
   const [att, setAtt] = useState("A+");
   const [hw, setHw] = useState("A+");
   const [photos, setPhotos] = useState([]);
+  const [cmtKeywords, setCmtKeywords] = useState(""); // 선생님이 입력하는 코멘트 키워드 (선택)
   const [rpt, setRpt] = useState(null);
   const [err, setErr] = useState("");
   const [cmt, setCmt] = useState("");
@@ -167,7 +194,22 @@ export default function App() {
       ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[필수 어조 - 매우 중요]\\n모든 문장을 반드시 '~입니다', '~합니다', '~됩니다', '~보입니다' 같은 격식체(하십시오체)로 작성합니다.\\n절대 금지: '~해요', '~예요', '~이에요', '~네요', '~군요', '~돼요' 같은 해요체 어미 사용 금지.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문을 다룬 학습 내용입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이므로 함께 다져나가겠습니다.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n다음 달, 다음 학습, 향후, 앞으로 배울, 앞으로 학습할, 다음에 배울, 다음에 학습할, 다음 단원, 다음 챕터\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않으며, 다음 달이나 앞으로 배울 내용에 대해서도 절대 언급하지 않습니다. 오직 현재 학습한 내용과 이해도만 분석하며, 반드시 격식체(~입니다)로 작성합니다."
       : "";
 
-    const commentsInst = "매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. (1)첫문장: '" + first + "는 이번 달에...' 또는 '" + first + "이는 이번 달에...' (성 제외, '학생' 단어 금지) (2)손편지처럼 친근하고 따뜻하게 (3)학습 성취 구체적 칭찬 (과목명·진도내용 활용) (4)수업 태도·참여도 1~2문장 (5)생활·인성 긍정적 면모 1문장 (6)아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지 (7)응원·기대로 마무리 (8)마지막 줄에 줄바꿈 후 '" + tchr + " 선생님 드림' (9)글자수 400~500자 엄수";
+    // 학생 이전 코멘트 이력 가져오기 (중복 방지용)
+    const cmtHistory = getCmtHistory(name);
+    const hasHistory = cmtHistory.length > 0;
+    const hasKeywords = cmtKeywords.trim().length > 0;
+
+    let commentsInst = "매우중요: 반드시 한글 400자 이상 500자 이내(공백포함). 400자 미만 금지. (1)첫문장: '" + first + "는 이번 달에...' 또는 '" + first + "이는 이번 달에...' (성 제외, '학생' 단어 금지) (2)손편지처럼 친근하고 따뜻하게 (3)학습 성취 구체적 칭찬 (과목명·진도내용 활용) (4)수업 태도·참여도 1~2문장 (5)생활·인성 긍정적 면모 1문장 (6)" + (hasKeywords ? "선생님이 제공한 키워드가 부정적·아쉬운 내용이면 '~하면 좋을 것 같습니다', '~하면 더 좋겠습니다' 같은 부드러운 제안형으로 1~2문장 포함 (단, 단정적 비판·~지만·~했어야 등은 금지)" : "아쉬운 점·부정 표현·~지만·~했으면 등 직접 언급 절대 금지") + " (7)응원·기대로 마무리 (8)마지막 줄에 줄바꿈 후 '" + tchr + " 선생님 드림' (9)글자수 400~500자 엄수";
+
+    // 선생님이 입력한 키워드가 있으면 반영 지침 추가
+    if (hasKeywords) {
+      commentsInst += " (10)★매우중요★ 선생님이 제공한 다음 키워드를 반드시 코멘트에 자연스럽게 녹여서 작성: [" + cmtKeywords.trim().replace(/"/g, "'") + "] - 부정적·아쉬운 키워드(예: 집중력 떨어짐, 숙제 미흡, 산만함, 지각 등)가 있어도 절대 직접적·단정적으로 비판하지 말고, '현재 상태를 부드럽게 인정하면서 개선 방향을 따뜻하게 제안하는' 방식으로 작성. 변환 예시: '집중력이 떨어진다' 키워드 → '집중하는 시간을 조금씩 늘려가면 더 좋을 것 같습니다' / '숙제를 자주 안 한다' 키워드 → '숙제를 조금 더 꼼꼼히 챙기는 습관을 들이면 좋겠습니다' / '발표를 어려워한다' 키워드 → '발표 시간에 자신감을 조금씩 키워가면 더 멋질 것 같습니다' / '단어 시험을 잘 못한다' 키워드 → '단어 암기를 매일 조금씩 꾸준히 해보면 큰 도움이 될 것 같습니다' / '산만하다' 키워드 → '수업 시간 집중도를 한 단계 더 끌어올리면 실력이 더욱 빛날 것 같습니다'. 핵심 원칙: ① 현재의 부족함을 부드럽게 인정 ② '~하면 좋을 것 같습니다', '~하면 더 ~할 것 같습니다' 같은 제안형 어미 사용 ③ 비난·단정·부정 표현 금지 ④ 학부모가 읽었을 때 따뜻하면서도 솔직하게 느껴지는 톤. 긍정적 키워드(예: 발표 자신감, 친구들과 잘 어울림 등)는 그대로 칭찬으로 자연스럽게 녹여 표현.";
+    }
+
+    // 이전 코멘트 이력이 있으면 중복 방지 지침 추가
+    if (hasHistory) {
+      commentsInst += " (11)★매우중요★ 이 학생에게 이전 달에 작성된 코멘트와 표현·문장구조·칭찬 포인트가 절대 겹치지 않게 완전히 새로운 표현으로 작성. 같은 단어·구문 반복 금지. 이전 코멘트:\\n" + cmtHistory.map(h => "[" + h.month + "] " + h.comment.slice(0, 200)).join("\\n") + "\\n이전 코멘트의 어떤 문장도 비슷하게 쓰지 말고, 새로운 시각과 표현으로 작성.";
+    }
 
     const promptParts = [];
     promptParts.push("당신은 와튼영어스쿨 담당 선생님입니다.");
@@ -274,7 +316,10 @@ export default function App() {
         }
       }
       setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "" });
-      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setReportPhotos([...photos]); setStep("report");
+      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setReportPhotos([...photos]);
+      // 코멘트 이력 저장 (다음 달 작성 시 중복 방지용)
+      if (p.comments) saveCmtHistory(name, month, p.comments);
+      setStep("report");
     } catch (e) {
       const fullMsg = "AI 생성 오류: " + e.message;
       setErr(fullMsg);
@@ -533,6 +578,25 @@ export default function App() {
           </div>
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: N }}>💬 코멘트 키워드 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 특정 학생만)</span></label>
+              {name.trim() && getCmtHistory(name).length > 0 && (
+                <span style={{ fontSize: 9, color: G, fontWeight: 700, background: "#fff8e7", border: `1px solid ${G}`, borderRadius: 4, padding: "2px 6px" }}>
+                  📚 이전 코멘트 {getCmtHistory(name).length}개월 기록 보유
+                </span>
+              )}
+            </div>
+            <textarea
+              value={cmtKeywords}
+              onChange={e => setCmtKeywords(e.target.value)}
+              placeholder="예: 집중력 떨어짐, 숙제 자주 잊음, 단어 시험 향상&#10;→ AI가 '집중하는 시간을 조금씩 늘려가면 좋겠습니다' 식으로 자연스럽게 변환"
+              style={{ ...inp, fontSize: 11, minHeight: 56, resize: "vertical", lineHeight: 1.5 }}
+            />
+            <div style={{ fontSize: 9.5, color: "#999", marginTop: 4, lineHeight: 1.5 }}>
+              💡 비워두면 평소처럼 자동 작성됩니다. 아쉬운 점이 있으면 솔직하게 적어주세요 — AI가 '~하면 좋겠습니다' 식의 따뜻한 제안형으로 바꿔서 반영해요.
+            </div>
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: N }}>📸 결과물 사진 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 최대 3장)</span></label>
               <button onClick={() => fileRef.current.click()} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>+ 추가</button>
             </div>
@@ -573,6 +637,21 @@ export default function App() {
           }} style={{ width: "100%", padding: 8, background: "#fff8e7", color: "#a07c2a", border: `1px solid ${G}`, borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", marginTop: 6 }}>
             🔬 API 진단 (디버깅용)
           </button>
+          {name.trim() && getCmtHistory(name).length > 0 && (
+            <button onClick={() => {
+              if (window.confirm(`'${name}' 학생의 이전 코멘트 이력 ${getCmtHistory(name).length}개를 모두 삭제할까요?\n(중복 방지 기능이 초기화됩니다)`)) {
+                try {
+                  const all = JSON.parse(localStorage.getItem(CMT_HISTORY_KEY) || "{}");
+                  delete all[name.trim()];
+                  localStorage.setItem(CMT_HISTORY_KEY, JSON.stringify(all));
+                  alert("✅ 이력이 삭제되었습니다.");
+                  setName(name); // 리렌더 트리거
+                } catch { alert("삭제 실패"); }
+              }
+            }} style={{ width: "100%", padding: 6, background: "#fff", color: "#888", border: "1px solid #ddd", borderRadius: 8, fontSize: 10, cursor: "pointer", marginTop: 6 }}>
+              🗑️ {name.trim()} 학생 코멘트 이력 초기화
+            </button>
+          )}
         </div>
       </div>
     );
@@ -594,7 +673,7 @@ export default function App() {
     return (
       <div style={{ fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif", background: "#f0ede5", minHeight: "100vh", padding: "12px 0 32px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto 6px", display: "flex", gap: 5, padding: "0 8px", flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
+          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setCmtKeywords(""); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
           <button onClick={() => doJpg("png", 3)} style={{ padding: "6px 12px", background: "#1565c0", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ PNG 다운로드 (선명함)</button>
@@ -681,7 +760,7 @@ export default function App() {
                 <span style={{ fontSize: 9, letterSpacing: 2, color: G, fontWeight: 700 }}>✍️ TEACHER'S COMMENTS AND FEEDBACK</span>
               </div>
               <div style={{ border: "1px solid #ddd", borderTop: "none", padding: "12px 14px", marginBottom: 10, background: "#fffef8", borderRadius: "0 0 6px 6px" }}>
-                <textarea value={cmt} onChange={e => { if (e.target.value.length <= 500) setCmt(e.target.value); }} style={{ width: "100%", fontSize: 12, lineHeight: 1.9, color: "#0d0d0d", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "none", background: "transparent", minHeight: 148, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
+                <textarea value={cmt} onChange={e => { if (e.target.value.length <= 500) setCmt(e.target.value); }} onBlur={() => { if (cmt && rpt) saveCmtHistory(rpt.name, rpt.month, cmt); }} style={{ width: "100%", fontSize: 12, lineHeight: 1.9, color: "#0d0d0d", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "none", background: "transparent", minHeight: 148, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
                 <div data-no-capture="true" style={{ textAlign: "right", fontSize: 10, marginTop: 3, color: cmt.length < 400 ? "#c00" : cmt.length > 480 ? "#e67e00" : "#2e7d32", fontWeight: 600 }}>
                   {cmt.length < 400 ? `⚠️ ${cmt.length}/500자 (400자 이상 필요)` : `✓ ${cmt.length}/500자`}
                 </div>
