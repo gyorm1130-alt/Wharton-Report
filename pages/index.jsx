@@ -4,6 +4,7 @@ const G="#c4a84f",N="#0f1f42",LBG="#0a1530",LG="#c4b28a";
 const LOGO_SRC="data:image/jpeg;base64,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";
 const CATS=["고난도 독해","국제반 수능 엔솔로지","내신","모의고사","문법트레이닝","서술형대비","수능형독해","독해/중등독해","영어논술","원어민","클래스 무비","토셀/토플","파닉스","LT"];
 const GRS=["A+","A","A-","B+","B","B-","C+","C","C-","D"];
+const EXAM_GRS=["A","B","C","D","E"];
 const CUR=`[서술형] Essay1~6: 주어/be동사/명사/형용사/관사/인칭대명사/전치사/현재진행형/명령문/제안문/접속사/There be/미래형will/4·5형식/조동사/to부정사/과거시제/비교급·최상급/지각동사/가주어·진주어/수동태/사역동사/동명사/분사
 [English Holic] After Phonics→Reading S1~S4 / OK Writing+Bridge / Writing Holic with Grammar / 영어문장쓰기설명서 / 문법트레이닝 Holic Grammar 1~24
 [문법트레이닝] Ch01인칭대명사→Ch02be동사→Ch03일반동사→Ch04의문사→Ch05명사→Ch06관사→Ch07대명사→Ch08형용사→Ch09부사→Ch10시제→Ch11조동사→Ch12to부정사→Ch13동명사→Ch14접속사→Ch15전치사→Ch16문장종류→Ch17문장형태→Ch18비교→Ch19수동태→Ch20관계대명사→Ch21관계부사→Ch22분사→Ch23가정법→Ch24일치화법`;
@@ -59,6 +60,33 @@ function saveCmtHistory(studentName, month, comment) {
     localStorage.setItem(CMT_HISTORY_KEY, JSON.stringify(all));
   } catch (e) { console.warn("코멘트 이력 저장 실패:", e); }
 }
+
+// 월간 성취도 모의고사 등급 이력 관리 (추이 그래프용)
+const EXAM_HISTORY_KEY = "wharton_exam_history";
+function getExamHistory(studentName) {
+  if (!studentName || typeof window === "undefined") return [];
+  try {
+    const all = JSON.parse(localStorage.getItem(EXAM_HISTORY_KEY) || "{}");
+    return all[studentName.trim()] || [];
+  } catch { return []; }
+}
+function saveExamHistory(studentName, month, grade) {
+  if (!studentName || !grade || typeof window === "undefined") return;
+  try {
+    const all = JSON.parse(localStorage.getItem(EXAM_HISTORY_KEY) || "{}");
+    const key = studentName.trim();
+    const list = all[key] || [];
+    // 같은 월이 이미 있으면 교체, 아니면 추가
+    const existIdx = list.findIndex(item => item.month === month);
+    if (existIdx >= 0) list[existIdx] = { month, grade };
+    else list.push({ month, grade });
+    // 최근 12개월만 저장
+    all[key] = list.slice(-12);
+    localStorage.setItem(EXAM_HISTORY_KEY, JSON.stringify(all));
+  } catch (e) { console.warn("시험 이력 저장 실패:", e); }
+}
+// 시험 등급(A~E) → 숫자 변환 (그래프 y축용, A=5 ~ E=1)
+const examG2n = g => ({ "A": 5, "B": 4, "C": 3, "D": 2, "E": 1 }[g] || 3);
 
 // 등급 → 숫자 변환 (0~1)
 const g2n = g => ({ "A+":1,"A":.9,"A-":.8,"B+":.7,"B":.6,"B-":.5,"C+":.4,"C":.3,"C-":.2,"D":.1 }[g] || .5);
@@ -131,7 +159,38 @@ function makeHTML(d) {
 </td></tr></table>
 </div>`;
 
-  return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>와튼_${d.name}_${d.month}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Malgun Gothic','Apple SD Gothic Neo',Arial,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}table{border-collapse:collapse;width:100%;}.no-break{page-break-inside:avoid;break-inside:avoid;}@media print{@page{margin:8mm;size:A4;}body{padding:0;}.main-card{page-break-after:auto;}.photo-section{page-break-before:auto;}}</style></head><body><div style="max-width:780px;margin:0 auto;"><div style="background:${LBG};padding:14px 28px 12px;text-align:center;"><div style="font-size:14px;letter-spacing:5px;color:${LG};font-weight:700;">WHARTON ENGLISH SCHOOL</div><div style="font-size:11px;letter-spacing:4px;color:#a0925a;margin-top:3px;">MONTHLY PROGRESS REPORT</div></div><table class="main-card"><tr><td style="background:linear-gradient(180deg,${N},#1a3060);width:32px;text-align:center;vertical-align:middle;"><div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;letter-spacing:4px;color:${G};font-weight:700;padding:14px 0;">REPORT CARD</div></td><td style="padding:12px 18px;vertical-align:top;"><table style="border:2px solid ${N};border-radius:6px;overflow:hidden;margin-bottom:10px;"><tr style="background:linear-gradient(135deg,${N},#1a3060);">${[["Name",d.name],["Class",d.cls],["Teacher",d.tchr],["Month",d.month]].map(([k,v]) => `<td style="padding:7px 12px;border-right:1px solid #2a4070;"><div style="font-size:8px;color:${G};letter-spacing:1px;">${k}</div><div style="font-size:12px;font-weight:700;color:#fff;">${v}</div></td>`).join("")}</tr></table>${cu}${SH("학습진도평가","📚")}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${cr}</table>${SH("학습 분석 리포트","🔍")}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${ar}</table>${achievementBlock}<div class="no-break"><div style="background:linear-gradient(135deg,${N},#1a3060);padding:8px 14px;border-radius:6px 6px 0 0;"><span style="font-size:9px;letter-spacing:3px;color:${G};font-weight:700;">✍️ TEACHER'S COMMENTS AND FEEDBACK</span></div><div style="border:1px solid #ddd;border-top:none;padding:14px 16px;border-radius:0 0 6px 6px;background:#fffef8;"><div style="font-size:11.5px;line-height:2.0;color:#222;white-space:pre-line;">${d.cmt}</div></div></div></td></tr></table>${ps}<div style="max-width:780px;margin:14px auto 0;padding:8px 18px 0;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;"><div style="background:${LBG};padding:4px 10px;border-radius:6px;"><span style="font-size:9px;color:${LG};font-weight:700;">와튼영어스쿨</span></div><span style="font-size:8px;color:#ccc;">WHARTON ENGLISH SCHOOL — MONTHLY PROGRESS REPORT</span></div></div><script>window.addEventListener("load",function(){setTimeout(function(){window.print();},700);});<\/script></body></html>`;
+  // 시험 결과 블록 (월간 모의고사 / 승반고사)
+  const examGcol = g => g === "A" ? "#2e7d32" : g === "B" ? "#1565c0" : g === "C" ? "#f57f17" : "#c62828";
+  const examGbg = g => g === "A" ? "#e8f5e9" : g === "B" ? "#e3f2fd" : g === "C" ? "#fff8e1" : "#fce4ec";
+  let examBlock = "";
+  if (d.exam1On || d.exam2On) {
+    let rows = "";
+    if (d.exam1On) {
+      // 추이 그래프 SVG (2회 이상)
+      let trendSVG = "";
+      if (d.examTrend && d.examTrend.length >= 2) {
+        const trend = d.examTrend.slice(-8);
+        const W = 460, H = 130, padL = 30, padR = 14, padT = 14, padB = 26;
+        const plotW = W - padL - padR, plotH = H - padT - padB;
+        const nn = trend.length;
+        const xAt = i => padL + (nn === 1 ? plotW / 2 : (plotW * i / (nn - 1)));
+        const eg2n = g => ({ "A": 5, "B": 4, "C": 3, "D": 2, "E": 1 }[g] || 3);
+        const yAt = g => padT + plotH - ((eg2n(g) - 1) / 4) * plotH;
+        const gColor = g => g === "A" ? "#2e7d32" : g === "B" ? "#1565c0" : g === "C" ? "#f57f17" : g === "D" ? "#e65100" : "#c62828";
+        const linePts = trend.map((t, i) => `${xAt(i)},${yAt(t.grade)}`).join(" ");
+        const grid = ["A", "B", "C", "D", "E"].map(g => `<line x1="${padL}" y1="${yAt(g)}" x2="${W - padR}" y2="${yAt(g)}" stroke="#e8e8e8" stroke-width="1"/><text x="${padL - 6}" y="${yAt(g) + 3}" text-anchor="end" font-size="9" fill="#999" font-family="Malgun Gothic,sans-serif">${g}</text>`).join("");
+        const dots = trend.map((t, i) => `<circle cx="${xAt(i)}" cy="${yAt(t.grade)}" r="4" fill="${gColor(t.grade)}" stroke="#fff" stroke-width="1.5"/><text x="${xAt(i)}" y="${yAt(t.grade) - 8}" text-anchor="middle" font-size="9" font-weight="700" fill="${gColor(t.grade)}" font-family="Malgun Gothic,sans-serif">${t.grade}</text><text x="${xAt(i)}" y="${H - 8}" text-anchor="middle" font-size="8" fill="#888" font-family="Malgun Gothic,sans-serif">${t.month.replace(/^\d+년\s*/, "")}</text>`).join("");
+        trendSVG = `<div style="margin-top:10px;background:#fafbff;border:1px solid #e0ddd5;border-radius:6px;padding:8px 10px;"><div style="font-size:9px;color:${G};font-weight:700;margin-bottom:4px;">📈 월간 모의고사 성적 추이 (최근 ${trend.length}회)</div><svg viewBox="0 0 ${W} ${H}" style="width:100%;display:block;">${grid}<polyline points="${linePts}" fill="none" stroke="${G}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${dots}</svg></div>`;
+      }
+      rows += `<div style="padding:10px 12px;${d.exam2On ? "border-bottom:1px solid #eee;" : ""}background:#fff;"><div style="margin-bottom:5px;"><span style="font-size:11px;font-weight:700;color:${N};margin-right:8px;">📊 월간 성취도 모의고사</span><span style="background:${examGbg(d.exam1Grade)};color:${examGcol(d.exam1Grade)};font-weight:900;font-size:13px;padding:2px 12px;border-radius:5px;">${d.exam1Grade}등급</span></div>${d.exam1Comment ? `<div style="font-size:11px;color:#1a1a1a;line-height:1.6;font-weight:500;">${d.exam1Comment}</div>` : ""}${trendSVG}</div>`;
+    }
+    if (d.exam2On) {
+      rows += `<div style="padding:10px 12px;background:#fff;"><div style="margin-bottom:5px;"><span style="font-size:11px;font-weight:700;color:${N};margin-right:8px;">🎯 승반고사</span><span style="background:${examGbg(d.exam2Grade)};color:${examGcol(d.exam2Grade)};font-weight:900;font-size:13px;padding:2px 12px;border-radius:5px;">${d.exam2Grade}등급</span></div>${d.exam2Comment ? `<div style="font-size:11px;color:#1a1a1a;line-height:1.6;font-weight:500;">${d.exam2Comment}</div>` : ""}</div>`;
+    }
+    examBlock = `${SH("시험 결과","📝")}<div style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${rows}</div>`;
+  }
+
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>와튼_${d.name}_${d.month}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Malgun Gothic','Apple SD Gothic Neo',Arial,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}table{border-collapse:collapse;width:100%;}.no-break{page-break-inside:avoid;break-inside:avoid;}@media print{@page{margin:8mm;size:A4;}body{padding:0;}.main-card{page-break-after:auto;}.photo-section{page-break-before:auto;}}</style></head><body><div style="max-width:780px;margin:0 auto;"><div style="background:${LBG};padding:14px 28px 12px;text-align:center;"><div style="font-size:14px;letter-spacing:5px;color:${LG};font-weight:700;">WHARTON ENGLISH SCHOOL</div><div style="font-size:11px;letter-spacing:4px;color:#a0925a;margin-top:3px;">MONTHLY PROGRESS REPORT</div></div><table class="main-card"><tr><td style="background:linear-gradient(180deg,${N},#1a3060);width:32px;text-align:center;vertical-align:middle;"><div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;letter-spacing:4px;color:${G};font-weight:700;padding:14px 0;">REPORT CARD</div></td><td style="padding:12px 18px;vertical-align:top;"><table style="border:2px solid ${N};border-radius:6px;overflow:hidden;margin-bottom:10px;"><tr style="background:linear-gradient(135deg,${N},#1a3060);">${[["Name",d.name],["Class",d.cls],["Teacher",d.tchr],["Month",d.month]].map(([k,v]) => `<td style="padding:7px 12px;border-right:1px solid #2a4070;"><div style="font-size:8px;color:${G};letter-spacing:1px;">${k}</div><div style="font-size:12px;font-weight:700;color:#fff;">${v}</div></td>`).join("")}</tr></table>${cu}${SH("학습진도평가","📚")}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${cr}</table>${SH("학습 분석 리포트","🔍")}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${ar}</table>${examBlock}${achievementBlock}<div class="no-break"><div style="background:linear-gradient(135deg,${N},#1a3060);padding:8px 14px;border-radius:6px 6px 0 0;"><span style="font-size:9px;letter-spacing:3px;color:${G};font-weight:700;">✍️ TEACHER'S COMMENTS AND FEEDBACK</span></div><div style="border:1px solid #ddd;border-top:none;padding:14px 16px;border-radius:0 0 6px 6px;background:#fffef8;"><div style="font-size:11.5px;line-height:2.0;color:#222;white-space:pre-line;">${d.cmt}</div></div></div></td></tr></table>${ps}<div style="max-width:780px;margin:14px auto 0;padding:8px 18px 0;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;"><div style="background:${LBG};padding:4px 10px;border-radius:6px;"><span style="font-size:9px;color:${LG};font-weight:700;">와튼영어스쿨</span></div><span style="font-size:8px;color:#ccc;">WHARTON ENGLISH SCHOOL — MONTHLY PROGRESS REPORT</span></div></div><script>window.addEventListener("load",function(){setTimeout(function(){window.print();},700);});<\/script></body></html>`;
 }
 
 const inp = { width: "100%", padding: "9px 12px", border: "1.5px solid #ddd", borderRadius: 7, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff" };
@@ -149,12 +208,22 @@ export default function App() {
   const [hw, setHw] = useState("A+");
   const [photos, setPhotos] = useState([]);
   const [cmtKeywords, setCmtKeywords] = useState(""); // 선생님이 입력하는 코멘트 키워드 (선택)
+  // 시험 섹션 - 단일 선택 ("none" | "exam1"=월간모의고사 | "exam2"=승반고사)
+  const [examType, setExamType] = useState("none");
+  const [exam1Grade, setExam1Grade] = useState("A");
+  const [exam1Fb, setExam1Fb] = useState(""); // 월간 모의고사 선생님 피드백 멘트
+  const [exam2Grade, setExam2Grade] = useState("A");
+  const [exam2Fb, setExam2Fb] = useState(""); // 승반고사 선생님 피드백 멘트
+  const exam1On = examType === "exam1";
+  const exam2On = examType === "exam2";
   const [rpt, setRpt] = useState(null);
   const [err, setErr] = useState("");
   const [cmt, setCmt] = useState("");
   const [paEdit, setPaEdit] = useState(""); // 사진 분석 편집용
   const [analEdit, setAnalEdit] = useState([]); // 학습 분석 리포트 편집용
   const [reportPhotos, setReportPhotos] = useState([]); // 리포트 화면에 표시할 사진 (분석은 유지하고 사진만 삭제 가능)
+  const [exam1CmtEdit, setExam1CmtEdit] = useState(""); // 월간 모의고사 코멘트 편집
+  const [exam2CmtEdit, setExam2CmtEdit] = useState(""); // 승반고사 코멘트 편집
   const [progOverride, setProgOverride] = useState({}); // 학생별 진도 오버라이드 {인덱스: "수정된 진도내용"}
   const [editIdx, setEditIdx] = useState(-1); // 편집 중인 진도 인덱스 (-1이면 편집 없음)
   const fileRef = useRef();
@@ -231,6 +300,13 @@ export default function App() {
     promptParts.push("[이번 달 학습 진도 및 평가]");
     promptParts.push(progressText);
     if (hp) promptParts.push("\n[첨부 사진: " + photos.length + "장 - 학생의 시험지/과제물]");
+    // 시험 정보 추가
+    if (exam1On) {
+      promptParts.push("\n[월간 성취도 모의고사] 등급: " + exam1Grade + "등급" + (exam1Fb.trim() ? " / 선생님 피드백: " + exam1Fb.trim() : ""));
+    }
+    if (exam2On) {
+      promptParts.push("\n[승반고사] 등급: " + exam2Grade + "등급" + (exam2Fb.trim() ? " / 선생님 피드백: " + exam2Fb.trim() : ""));
+    }
     promptParts.push("");
     // 학생의 전체 등급 평균을 계산해서 분석 등급 자동 매칭 (A+ 학생에게 B+ 발전영역 나오는 문제 방지)
     const allGrades = [g2n(att), g2n(hw), ...cwg.map(c => g2n(c.grade))];
@@ -241,6 +317,16 @@ export default function App() {
     // A+ 학생은 발전영역도 A로 (B+ 안 나오게)
     const finalGrowthGrade = avgGrade >= 0.95 ? "A" : avgGrade >= 0.85 ? "A-" : growthGrade;
 
+    // 시험 코멘트 instruction 생성
+    const examInstParts = [];
+    if (exam1On) {
+      examInstParts.push("월간 성취도 모의고사(" + exam1Grade + "등급)" + (exam1Fb.trim() ? " 선생님 피드백 '" + exam1Fb.trim().replace(/"/g, "'") + "'을 반영하여" : "에 대해") + " 격식체(~입니다)로 2문장 작성. 등급과 피드백 내용을 따뜻하게 녹이되, 부정적 내용은 '~하면 좋겠습니다' 식 제안형으로. ~해요 금지");
+    }
+    if (exam2On) {
+      examInstParts.push("승반고사(" + exam2Grade + "등급)" + (exam2Fb.trim() ? " 선생님 피드백 '" + exam2Fb.trim().replace(/"/g, "'") + "'을 반영하여" : "에 대해") + " 격식체(~입니다)로 2문장 작성. 등급과 피드백 내용을 따뜻하게 녹이되, 부정적 내용은 '~하면 좋겠습니다' 식 제안형으로. ~해요 금지");
+    }
+    const hasExam = exam1On || exam2On;
+
     promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지):");
     promptParts.push("{");
     promptParts.push('  "analysisItems": [');
@@ -248,6 +334,8 @@ export default function App() {
     promptParts.push('    {"label":"발전 영역","detail":"' + (avgGrade >= 0.85 ? '학생이 이미 우수하지만 더욱 완성도를 높일 수 있는 세부 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지, 비판 금지)' : '상대적으로 보강이 필요한 영역을 부드럽게 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)') + '","grade":"' + finalGrowthGrade + '"},');
     promptParts.push('    {"label":"권장 학습 방향","detail":"현재 진도를 기준으로 어떤 부분을 더 다지면 좋을지 학습 방향 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달·다음 학습·향후 계획·앞으로 배울 단원 등 미래 학습 내용 언급 절대 금지, 오직 현재 학습 보완 방향만 작성)","grade":"' + directionGrade + '"}');
     promptParts.push('  ],');
+    if (exam1On) promptParts.push('  "exam1Comment": "' + examInstParts[0] + '",');
+    if (exam2On) promptParts.push('  "exam2Comment": "' + (exam1On ? examInstParts[1] : examInstParts[0]) + '",');
     promptParts.push('  "photoAnalysis": "' + photoAnaInst + '",');
     promptParts.push('  "comments": "' + commentsInst + '"');
     promptParts.push("}");
@@ -324,8 +412,14 @@ export default function App() {
             : `${first}가 학습한 내용을 검토한 결과, 전반적으로 성실하게 임하고 있으며 부족한 부분은 다음 달 학습으로 충분히 보완 가능합니다.`;
         }
       }
-      setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "" });
-      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setReportPhotos([...photos]);
+      // 월간 모의고사 등급 이력 저장 (추이 그래프용) - 저장 전에 이전 이력 가져와서 추이 데이터 구성
+      let examTrend = [];
+      if (exam1On) {
+        saveExamHistory(name, month, exam1Grade);
+        examTrend = getExamHistory(name); // 이번 등급이 포함된 최신 이력
+      }
+      setRpt({ name, first, month, cls, tchr, cats: cwg, att, hw, photos, cl: p.curriculumLevel || "", ns: p.nextStep || "", anal: Array.isArray(p.analysisItems) ? p.analysisItems : [], pa: safePA, cmt: p.comments || "", exam1On, exam1Grade, exam1Comment: p.exam1Comment || "", exam2On, exam2Grade, exam2Comment: p.exam2Comment || "", examTrend });
+      setCmt(p.comments || ""); setPaEdit(safePA); setAnalEdit(Array.isArray(p.analysisItems) ? p.analysisItems.map(a => ({ ...a })) : []); setReportPhotos([...photos]); setExam1CmtEdit(p.exam1Comment || ""); setExam2CmtEdit(p.exam2Comment || "");
       // 코멘트 이력 저장 (다음 달 작성 시 중복 방지용)
       if (p.comments) saveCmtHistory(name, month, p.comments);
       setStep("report");
@@ -340,7 +434,7 @@ export default function App() {
 
   const doPrint = () => {
     const finalAnal = analEdit.length ? analEdit : (rpt.anal || []);
-    const html = makeHTML({ ...rpt, cmt, pa: paEdit, anal: finalAnal, photos: reportPhotos });
+    const html = makeHTML({ ...rpt, cmt, pa: paEdit, anal: finalAnal, photos: reportPhotos, exam1Comment: exam1CmtEdit, exam2Comment: exam2CmtEdit });
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -352,7 +446,10 @@ export default function App() {
   const doShare = () => {
     const d = rpt;
     const finalAnal = analEdit.length ? analEdit : (d.anal || []);
-    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...finalAnal.map(a => `·${a.label}(${a.grade}):${a.detail}`), "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
+    const examTxt = [];
+    if (d.exam1On) { examTxt.push(`📊월간성취도모의고사: ${d.exam1Grade}등급`); if (exam1CmtEdit) examTxt.push(`  ${exam1CmtEdit}`); }
+    if (d.exam2On) { examTxt.push(`🎯승반고사: ${d.exam2Grade}등급`); if (exam2CmtEdit) examTxt.push(`  ${exam2CmtEdit}`); }
+    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...finalAnal.map(a => `·${a.label}(${a.grade}):${a.detail}`), examTxt.length ? "\n📝시험결과\n" + examTxt.join("\n") : "", "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
     try {
       const ta = document.createElement("textarea");
       ta.value = txt;
@@ -605,6 +702,50 @@ export default function App() {
             </div>
           </div>
           <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: N, display: "block", marginBottom: 5 }}>📝 시험 결과 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 이번 달 본 시험 하나만)</span></label>
+            {/* 시험 종류 단일 선택 버튼 */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: examType !== "none" ? 10 : 0 }}>
+              {[["none", "시험 없음", "—"], ["exam1", "📊 월간 모의고사", ""], ["exam2", "🎯 승반고사", "7·11월"]].map(([val, label, sub]) => (
+                <button key={val} onClick={() => setExamType(val)} style={{ padding: "9px 6px", borderRadius: 8, border: `1.5px solid ${examType === val ? G : "#e0ddd5"}`, background: examType === val ? "#fffdf5" : "#fafaf8", cursor: "pointer", fontSize: 11, fontWeight: examType === val ? 800 : 600, color: examType === val ? N : "#888", lineHeight: 1.3, transition: "all 0.15s" }}>
+                  {label}{sub && <div style={{ fontSize: 8, color: "#aaa", marginTop: 1 }}>{sub}</div>}
+                </button>
+              ))}
+            </div>
+            {/* 월간 모의고사 선택 시 */}
+            {exam1On && (
+              <div style={{ border: `1.5px solid ${G}`, borderRadius: 8, padding: 10, background: "#fffdf5" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: N }}>📊 월간 성취도 모의고사</span>
+                  <select value={exam1Grade} onChange={e => setExam1Grade(e.target.value)} style={{ background: exam1Grade === "A" ? "#e8f5e9" : exam1Grade === "B" ? "#e3f2fd" : exam1Grade === "C" ? "#fff8e1" : "#fce4ec", color: exam1Grade === "A" ? "#2e7d32" : exam1Grade === "B" ? "#1565c0" : exam1Grade === "C" ? "#f57f17" : "#c62828", padding: "5px 12px", borderRadius: 6, fontSize: 14, fontWeight: 900, cursor: "pointer", outline: "none", border: `1.5px solid ${G}`, fontFamily: "inherit" }}>
+                    {EXAM_GRS.map(g => <option key={g} value={g}>{g}등급</option>)}
+                  </select>
+                </div>
+                <textarea value={exam1Fb} onChange={e => setExam1Fb(e.target.value)} placeholder="선생님 피드백 멘트 (예: 어법 파트 만점, 빈칸추론 보강 필요)&#10;→ AI가 이 멘트를 바탕으로 시험 코멘트를 따뜻하게 작성해요" style={{ ...inp, fontSize: 11, minHeight: 48, resize: "vertical", lineHeight: 1.5 }} />
+                {/* 추이 그래프 미리보기 (이전 기록 있을 때) */}
+                {name.trim() && getExamHistory(name).length > 0 && (
+                  <div style={{ marginTop: 8, background: "#fff", border: "1px solid #e0ddd5", borderRadius: 6, padding: "8px 10px" }}>
+                    <div style={{ fontSize: 9, color: G, fontWeight: 700, marginBottom: 4 }}>📈 {name.trim()} 모의고사 추이 (이번 등급 포함 시)</div>
+                    <div style={{ fontSize: 9, color: "#888" }}>
+                      이전 {getExamHistory(name).length}회 기록 보유 — 리포트에 추이 그래프가 표시됩니다
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* 승반고사 선택 시 */}
+            {exam2On && (
+              <div style={{ border: `1.5px solid ${G}`, borderRadius: 8, padding: 10, background: "#fffdf5" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: N }}>🎯 승반고사</span>
+                  <select value={exam2Grade} onChange={e => setExam2Grade(e.target.value)} style={{ background: exam2Grade === "A" ? "#e8f5e9" : exam2Grade === "B" ? "#e3f2fd" : exam2Grade === "C" ? "#fff8e1" : "#fce4ec", color: exam2Grade === "A" ? "#2e7d32" : exam2Grade === "B" ? "#1565c0" : exam2Grade === "C" ? "#f57f17" : "#c62828", padding: "5px 12px", borderRadius: 6, fontSize: 14, fontWeight: 900, cursor: "pointer", outline: "none", border: `1.5px solid ${G}`, fontFamily: "inherit" }}>
+                    {EXAM_GRS.map(g => <option key={g} value={g}>{g}등급</option>)}
+                  </select>
+                </div>
+                <textarea value={exam2Fb} onChange={e => setExam2Fb(e.target.value)} placeholder="선생님 피드백 멘트 (예: 다음 레벨 진입 성공, 독해 속도 우수)&#10;→ AI가 이 멘트를 바탕으로 시험 코멘트를 따뜻하게 작성해요" style={{ ...inp, fontSize: 11, minHeight: 48, resize: "vertical", lineHeight: 1.5 }} />
+              </div>
+            )}
+          </div>
+          <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: N }}>📸 결과물 사진 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 최대 3장)</span></label>
               <button onClick={() => fileRef.current.click()} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>+ 추가</button>
@@ -646,19 +787,24 @@ export default function App() {
           }} style={{ width: "100%", padding: 8, background: "#fff8e7", color: "#a07c2a", border: `1px solid ${G}`, borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: "pointer", marginTop: 6 }}>
             🔬 API 진단 (디버깅용)
           </button>
-          {name.trim() && getCmtHistory(name).length > 0 && (
+          {name.trim() && (getCmtHistory(name).length > 0 || getExamHistory(name).length > 0) && (
             <button onClick={() => {
-              if (window.confirm(`'${name}' 학생의 이전 코멘트 이력 ${getCmtHistory(name).length}개를 모두 삭제할까요?\n(중복 방지 기능이 초기화됩니다)`)) {
+              const cmtN = getCmtHistory(name).length;
+              const examN = getExamHistory(name).length;
+              if (window.confirm(`'${name}' 학생의 저장된 이력을 모두 삭제할까요?\n· 코멘트 이력 ${cmtN}개 (중복 방지용)\n· 모의고사 추이 ${examN}회 (그래프용)`)) {
                 try {
-                  const all = JSON.parse(localStorage.getItem(CMT_HISTORY_KEY) || "{}");
-                  delete all[name.trim()];
-                  localStorage.setItem(CMT_HISTORY_KEY, JSON.stringify(all));
+                  const allC = JSON.parse(localStorage.getItem(CMT_HISTORY_KEY) || "{}");
+                  delete allC[name.trim()];
+                  localStorage.setItem(CMT_HISTORY_KEY, JSON.stringify(allC));
+                  const allE = JSON.parse(localStorage.getItem(EXAM_HISTORY_KEY) || "{}");
+                  delete allE[name.trim()];
+                  localStorage.setItem(EXAM_HISTORY_KEY, JSON.stringify(allE));
                   alert("✅ 이력이 삭제되었습니다.");
                   setName(name); // 리렌더 트리거
                 } catch { alert("삭제 실패"); }
               }
             }} style={{ width: "100%", padding: 6, background: "#fff", color: "#888", border: "1px solid #ddd", borderRadius: 8, fontSize: 10, cursor: "pointer", marginTop: 6 }}>
-              🗑️ {name.trim()} 학생 코멘트 이력 초기화
+              🗑️ {name.trim()} 학생 이력 초기화 (코멘트·모의고사 추이)
             </button>
           )}
         </div>
@@ -682,7 +828,7 @@ export default function App() {
     return (
       <div style={{ fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif", background: "#f0ede5", minHeight: "100vh", padding: "12px 0 32px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto 6px", display: "flex", gap: 5, padding: "0 8px", flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setCmtKeywords(""); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
+          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setCmtKeywords(""); setExamType("none"); setExam1Grade("A"); setExam1Fb(""); setExam2Grade("A"); setExam2Fb(""); setExam1CmtEdit(""); setExam2CmtEdit(""); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
           <button onClick={() => doJpg("png", 3)} style={{ padding: "6px 12px", background: "#1565c0", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ PNG 다운로드 (선명함)</button>
@@ -749,6 +895,77 @@ export default function App() {
                   </div>
                 ))}
               </div>
+              {(d.exam1On || d.exam2On) && (() => {
+                const examGcol = g => g === "A" ? "#2e7d32" : g === "B" ? "#1565c0" : g === "C" ? "#f57f17" : "#c62828";
+                const examGbg = g => g === "A" ? "#e8f5e9" : g === "B" ? "#e3f2fd" : g === "C" ? "#fff8e1" : "#fce4ec";
+                return (
+                  <div style={{ marginBottom: 9 }}>
+                    <SH t="시험 결과" e="📝" />
+                    <div style={{ border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 6px 6px", overflow: "hidden" }}>
+                      {d.exam1On && (
+                        <div style={{ borderBottom: d.exam2On ? "1px solid #eee" : "none", padding: "10px 12px", background: "#fff" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: N }}>📊 월간 성취도 모의고사</span>
+                            <span style={{ background: examGbg(d.exam1Grade), color: examGcol(d.exam1Grade), fontWeight: 900, fontSize: 13, padding: "2px 12px", borderRadius: 5, border: `1.5px solid ${examGcol(d.exam1Grade)}33` }}>{d.exam1Grade}등급</span>
+                          </div>
+                          {(exam1CmtEdit || d.exam1Comment) && (
+                            <textarea value={exam1CmtEdit} onChange={e => setExam1CmtEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.6, color: "#1a1a1a", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 40, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
+                          )}
+                          {/* 추이 그래프 (2회 이상 기록 시) */}
+                          {d.examTrend && d.examTrend.length >= 2 && (() => {
+                            const trend = d.examTrend.slice(-8); // 최근 8회
+                            const W = 460, H = 130, padL = 30, padR = 14, padT = 14, padB = 26;
+                            const plotW = W - padL - padR, plotH = H - padT - padB;
+                            const n = trend.length;
+                            const xAt = i => padL + (n === 1 ? plotW / 2 : (plotW * i / (n - 1)));
+                            const yAt = g => padT + plotH - ((examG2n(g) - 1) / 4) * plotH; // A=5(위) ~ E=1(아래)
+                            const linePts = trend.map((t, i) => `${xAt(i)},${yAt(t.grade)}`).join(" ");
+                            const gColor = g => g === "A" ? "#2e7d32" : g === "B" ? "#1565c0" : g === "C" ? "#f57f17" : g === "D" ? "#e65100" : "#c62828";
+                            return (
+                              <div style={{ marginTop: 10, background: "#fafbff", border: "1px solid #e0ddd5", borderRadius: 6, padding: "8px 10px" }}>
+                                <div style={{ fontSize: 9, color: G, fontWeight: 700, marginBottom: 4 }}>📈 월간 모의고사 성적 추이 (최근 {trend.length}회)</div>
+                                <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", display: "block" }}>
+                                  {/* y축 등급 라벨 + 가로 그리드 */}
+                                  {["A", "B", "C", "D", "E"].map(g => {
+                                    const y = yAt(g);
+                                    return (
+                                      <g key={g}>
+                                        <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e8e8e8" strokeWidth="1" />
+                                        <text x={padL - 6} y={y + 3} textAnchor="end" fontSize="9" fill="#999" fontFamily="Malgun Gothic,sans-serif">{g}</text>
+                                      </g>
+                                    );
+                                  })}
+                                  {/* 추이 선 */}
+                                  <polyline points={linePts} fill="none" stroke={G} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+                                  {/* 데이터 점 + 등급 라벨 + 월 라벨 */}
+                                  {trend.map((t, i) => (
+                                    <g key={i}>
+                                      <circle cx={xAt(i)} cy={yAt(t.grade)} r="4" fill={gColor(t.grade)} stroke="#fff" strokeWidth="1.5" />
+                                      <text x={xAt(i)} y={yAt(t.grade) - 8} textAnchor="middle" fontSize="9" fontWeight="700" fill={gColor(t.grade)} fontFamily="Malgun Gothic,sans-serif">{t.grade}</text>
+                                      <text x={xAt(i)} y={H - 8} textAnchor="middle" fontSize="8" fill="#888" fontFamily="Malgun Gothic,sans-serif">{t.month.replace(/^\d+년\s*/, "")}</text>
+                                    </g>
+                                  ))}
+                                </svg>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                      {d.exam2On && (
+                        <div style={{ padding: "10px 12px", background: "#fff" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, color: N }}>🎯 승반고사</span>
+                            <span style={{ background: examGbg(d.exam2Grade), color: examGcol(d.exam2Grade), fontWeight: 900, fontSize: 13, padding: "2px 12px", borderRadius: 5, border: `1.5px solid ${examGcol(d.exam2Grade)}33` }}>{d.exam2Grade}등급</span>
+                          </div>
+                          {(exam2CmtEdit || d.exam2Comment) && (
+                            <textarea value={exam2CmtEdit} onChange={e => setExam2CmtEdit(e.target.value)} style={{ width: "100%", fontSize: 11, lineHeight: 1.6, color: "#1a1a1a", fontFamily: "'Malgun Gothic',sans-serif", border: "none", outline: "none", resize: "vertical", background: "transparent", minHeight: 40, padding: 0, boxSizing: "border-box", fontWeight: 500 }} />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
               <div style={{ background: "#eef1f8", border: "1px solid #c8d4ea", borderRadius: 7, padding: "10px 14px", marginBottom: 9 }}>
                 <div style={{ fontSize: 9, color: N, fontWeight: 700, marginBottom: 8 }}>📊 학습 성취도</div>
                 <div style={{ display: "flex", gap: 18, alignItems: "stretch" }}>
