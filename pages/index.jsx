@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 const G="#c4a84f",N="#1a2f5a",LBG="#1e3460",LG="#d4c08a";
 const WINE="#8b2e2e",MUSTARD="#c87838",TEAL="#5a8a87";
@@ -20,6 +20,94 @@ const gst = g => ({ background: gbg(g), color: gcol(g), fontWeight: 900 });
 const fn = n => { const s = n.trim(); return s.length <= 2 ? s : s.slice(1); };
 const today = new Date();
 
+// 상담 신청 랜딩 주소 (A안 CTA) — 신입상담 전용 랜딩페이지가 생기면 여기만 교체
+const CONSULT_URL = "https://whartonenglish.co.kr";
+
+// ── 반 프리셋 (반 공통 정보 자동 저장·복원) ──
+const PRESET_KEY = "wharton_class_presets";
+const LAST_CLASS_KEY = "wharton_last_class";
+function getPresets() {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "{}"); } catch { return {}; }
+}
+function savePreset(cls, data) {
+  if (!cls || typeof window === "undefined") return;
+  try {
+    const all = getPresets();
+    all[cls.trim()] = { ...data, savedAt: new Date().toISOString() };
+    localStorage.setItem(PRESET_KEY, JSON.stringify(all));
+    localStorage.setItem(LAST_CLASS_KEY, cls.trim());
+  } catch (e) { console.warn("반 프리셋 저장 실패:", e); }
+}
+function deletePreset(cls) {
+  if (!cls || typeof window === "undefined") return;
+  try {
+    const all = getPresets();
+    delete all[cls.trim()];
+    localStorage.setItem(PRESET_KEY, JSON.stringify(all));
+    if (localStorage.getItem(LAST_CLASS_KEY) === cls.trim()) localStorage.removeItem(LAST_CLASS_KEY);
+  } catch (e) { console.warn("반 프리셋 삭제 실패:", e); }
+}
+
+// ── 전체 데이터 백업/복원 (코멘트 이력·모의고사 추이·반 프리셋 → JSON 파일) ──
+function exportAllData() {
+  try {
+    const dump = {
+      app: "wharton-report", version: 2, exportedAt: new Date().toISOString(),
+      cmtHistory: JSON.parse(localStorage.getItem("wharton_cmt_history") || "{}"),
+      examHistory: JSON.parse(localStorage.getItem("wharton_exam_history") || "{}"),
+      presets: JSON.parse(localStorage.getItem(PRESET_KEY) || "{}"),
+    };
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const d = new Date();
+    a.href = url;
+    a.download = `와튼리포트_백업_${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}.json`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 3000);
+    return true;
+  } catch { return false; }
+}
+function importAllData(file) {
+  return new Promise(resolve => {
+    const rd = new FileReader();
+    rd.onload = e => {
+      try {
+        const d = JSON.parse(e.target.result);
+        if (!d || d.app !== "wharton-report") { resolve({ ok: false, msg: "와튼 리포트 백업 파일이 아닙니다." }); return; }
+        const mergeMap = (key, incoming) => {
+          const cur = JSON.parse(localStorage.getItem(key) || "{}");
+          localStorage.setItem(key, JSON.stringify({ ...cur, ...(incoming || {}) }));
+          return Object.keys(incoming || {}).length;
+        };
+        const c1 = mergeMap("wharton_cmt_history", d.cmtHistory);
+        const c2 = mergeMap("wharton_exam_history", d.examHistory);
+        const c3 = mergeMap(PRESET_KEY, d.presets);
+        resolve({ ok: true, msg: `복원 완료!\n· 코멘트 이력: 학생 ${c1}명\n· 모의고사 추이: 학생 ${c2}명\n· 반 프리셋: ${c3}개` });
+      } catch { resolve({ ok: false, msg: "파일을 읽을 수 없습니다. 올바른 백업 JSON인지 확인해주세요." }); }
+    };
+    rd.onerror = () => resolve({ ok: false, msg: "파일 읽기 실패" });
+    rd.readAsText(file);
+  });
+}
+
+// 클립보드 복사 (최신 Clipboard API 우선, 구형 브라우저 폴백)
+async function copyText(txt) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(txt); return true; }
+  } catch { /* 폴백으로 진행 */ }
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = txt;
+    ta.style.cssText = "position:fixed;top:0;left:0;opacity:0.01;width:1px;height:1px;";
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch { return false; }
+}
+
 function compImg(f) {
   return new Promise(r => {
     const rd = new FileReader();
@@ -27,12 +115,16 @@ function compImg(f) {
       const i = new Image();
       i.onload = () => {
         const c = document.createElement("canvas");
-        let w = i.width, h = i.height, M = 480;
+        // 1400px 유지 필수: 480px로 줄이면 AI가 문항 글씨를 못 읽고 문법 주제를 추측해 오분석함 (2026-07 동명사→최상급 오판 사례)
+        let w = i.width, h = i.height, M = 1400;
         if (w > M) { h = h * M / w; w = M; }
         if (h > M) { w = w * M / h; h = M; }
         c.width = w; c.height = h;
         c.getContext("2d").drawImage(i, 0, 0, w, h);
-        r({ name: f.name, url: c.toDataURL("image/jpeg", 0.45), type: "image/jpeg" });
+        // 페이로드 안전장치: 장당 base64 약 1MB 이하가 될 때까지 품질만 단계적으로 낮춤 (3장 + 프롬프트 ≒ 3MB < Vercel 4.5MB 제한)
+        let q = 0.82, url = c.toDataURL("image/jpeg", q);
+        while (url.length > 1000 * 1024 && q > 0.4) { q -= 0.12; url = c.toDataURL("image/jpeg", q); }
+        r({ name: f.name, url, type: "image/jpeg" });
       };
       i.src = e.target.result;
     };
@@ -195,7 +287,9 @@ function makeHTML(d) {
     examBlock = `<div style="background:linear-gradient(135deg,${G},#b8983f);padding:8px 14px;border-radius:6px 6px 0 0;"><span style="color:#fff;font-size:11px;font-weight:800;letter-spacing:1px;">📝 시험 결과</span></div><div style="border:1.5px solid ${G};border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${rows}</div>`;
   }
 
-  return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>와튼_${d.name}_${d.month}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Malgun Gothic','Apple SD Gothic Neo',Arial,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}table{border-collapse:collapse;width:100%;}.no-break{page-break-inside:avoid;break-inside:avoid;}@media print{@page{margin:8mm;size:A4;}body{padding:0;}.main-card{page-break-after:auto;}.photo-section{page-break-before:auto;}}</style></head><body><div style="max-width:780px;margin:0 auto;"><div style="background:linear-gradient(135deg,#2e1a70,#1e3460 55%,#34528a);padding:18px 28px 16px;text-align:center;"><div style="background:#f5f0e6;display:inline-block;border-radius:14px;padding:8px 13px;margin-bottom:7px;box-shadow:0 6px 18px rgba(46,26,112,0.4);border:1.5px solid ${G};"><img src="${LOGO_SRC}" style="width:150px;display:block;"></div><div style="font-size:13px;letter-spacing:5px;color:#e8d9a8;font-weight:700;">WHARTON ENGLISH SCHOOL</div><div style="font-size:10px;letter-spacing:4px;color:${G};margin-top:3px;">MONTHLY PROGRESS REPORT</div></div><table class="main-card"><tr><td style="background:linear-gradient(180deg,${N},#1a3060);width:32px;text-align:center;vertical-align:middle;"><div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;letter-spacing:4px;color:${G};font-weight:700;padding:14px 0;">REPORT CARD</div></td><td style="padding:12px 18px;vertical-align:top;"><table style="border:2px solid ${N};border-radius:6px;overflow:hidden;margin-bottom:10px;"><tr style="background:linear-gradient(135deg,${N},#1a3060);">${[["Name",d.name],["Class",d.cls],["Teacher",d.tchr],["Month",d.month]].map(([k,v]) => `<td style="padding:7px 12px;border-right:1px solid #2a4070;"><div style="font-size:8px;color:${G};letter-spacing:1px;">${k}</div><div style="font-size:12px;font-weight:700;color:#fff;">${v}</div></td>`).join("")}</tr></table>${cu}${SH("학습진도평가","📚",TEAL)}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${cr}</table>${SH("학습 분석 리포트","🔍",MUSTARD)}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${ar}</table>${examBlock}${achievementBlock}<div class="no-break"><div style="background:linear-gradient(135deg,${WINE},${WINE}dd);padding:8px 14px;border-radius:6px 6px 0 0;"><span style="font-size:9px;letter-spacing:3px;color:#fff;font-weight:700;">✍️ TEACHER'S COMMENTS AND FEEDBACK</span></div><div style="border:1px solid #ddd;border-top:none;padding:14px 16px;border-radius:0 0 6px 6px;background:#fffef8;"><div style="font-size:11.5px;line-height:2.0;color:#222;white-space:pre-line;">${d.cmt}</div></div></div></td></tr></table>${ps}<div style="max-width:780px;margin:14px auto 0;padding:8px 18px 0;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;"><img src="${LOGO_SRC}" style="width:72px;display:block;"><span style="font-size:8px;color:#ccc;">WHARTON ENGLISH SCHOOL — MONTHLY PROGRESS REPORT</span></div></div><script>window.addEventListener("load",function(){setTimeout(function(){window.print();},700);});<\/script></body></html>`;
+  // 상담 CTA (A안) — 출력물 하단, 푸터 바로 위
+  const ctaBlock = `<div style="max-width:780px;margin:12px auto 0;background:linear-gradient(135deg,#fffdf2,#fff6dd);border:1.5px solid ${G};border-radius:8px;padding:10px 16px;text-align:center;page-break-inside:avoid;break-inside:avoid;"><div style="font-size:11px;color:${N};font-weight:700;margin-bottom:3px;">💬 자녀의 학습에 대해 궁금한 점이 있으시면 언제든 상담을 신청해 주세요</div><a href="${CONSULT_URL}" style="font-size:11px;color:#a07c2a;font-weight:800;text-decoration:none;">▶ 와튼영어스쿨 상담 신청 · ${CONSULT_URL.replace(/^https?:\/\//, "")}</a></div>`;
+  return `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><title>와튼_${d.name}_${d.month}</title><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Malgun Gothic','Apple SD Gothic Neo',Arial,sans-serif;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact;}table{border-collapse:collapse;width:100%;}.no-break{page-break-inside:avoid;break-inside:avoid;}@media print{@page{margin:8mm;size:A4;}body{padding:0;}.main-card{page-break-after:auto;}.photo-section{page-break-before:auto;}}</style></head><body><div style="max-width:780px;margin:0 auto;"><div style="background:linear-gradient(135deg,#2e1a70,#1e3460 55%,#34528a);padding:18px 28px 16px;text-align:center;"><div style="background:#f5f0e6;display:inline-block;border-radius:14px;padding:8px 13px;margin-bottom:7px;box-shadow:0 6px 18px rgba(46,26,112,0.4);border:1.5px solid ${G};"><img src="${LOGO_SRC}" style="width:150px;display:block;"></div><div style="font-size:13px;letter-spacing:5px;color:#e8d9a8;font-weight:700;">WHARTON ENGLISH SCHOOL</div><div style="font-size:10px;letter-spacing:4px;color:${G};margin-top:3px;">MONTHLY PROGRESS REPORT</div></div><table class="main-card"><tr><td style="background:linear-gradient(180deg,${N},#1a3060);width:32px;text-align:center;vertical-align:middle;"><div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:9px;letter-spacing:4px;color:${G};font-weight:700;padding:14px 0;">REPORT CARD</div></td><td style="padding:12px 18px;vertical-align:top;"><table style="border:2px solid ${N};border-radius:6px;overflow:hidden;margin-bottom:10px;"><tr style="background:linear-gradient(135deg,${N},#1a3060);">${[["Name",d.name],["Class",d.cls],["Teacher",d.tchr],["Month",d.month]].map(([k,v]) => `<td style="padding:7px 12px;border-right:1px solid #2a4070;"><div style="font-size:8px;color:${G};letter-spacing:1px;">${k}</div><div style="font-size:12px;font-weight:700;color:#fff;">${v}</div></td>`).join("")}</tr></table>${cu}${SH("학습진도평가","📚",TEAL)}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${cr}</table>${SH("학습 분석 리포트","🔍",MUSTARD)}<table style="border:1px solid #ddd;border-top:none;margin-bottom:10px;border-radius:0 0 6px 6px;overflow:hidden;">${ar}</table>${examBlock}${achievementBlock}<div class="no-break"><div style="background:linear-gradient(135deg,${WINE},${WINE}dd);padding:8px 14px;border-radius:6px 6px 0 0;"><span style="font-size:9px;letter-spacing:3px;color:#fff;font-weight:700;">✍️ TEACHER'S COMMENTS AND FEEDBACK</span></div><div style="border:1px solid #ddd;border-top:none;padding:14px 16px;border-radius:0 0 6px 6px;background:#fffef8;"><div style="font-size:11.5px;line-height:2.0;color:#222;white-space:pre-line;">${d.cmt}</div></div></div></td></tr></table>${ps}${ctaBlock}<div style="max-width:780px;margin:14px auto 0;padding:8px 18px 0;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;"><img src="${LOGO_SRC}" style="width:72px;display:block;"><span style="font-size:8px;color:#ccc;">WHARTON ENGLISH SCHOOL — MONTHLY PROGRESS REPORT</span></div></div><script>window.addEventListener("load",function(){setTimeout(function(){window.print();},700);});<\/script></body></html>`;
 }
 
 const inp = { width: "100%", padding: "9px 12px", border: "1.5px solid #ddd", borderRadius: 7, fontSize: 13, outline: "none", fontFamily: "inherit", background: "#fff" };
@@ -231,7 +325,50 @@ export default function App() {
   const [exam2CmtEdit, setExam2CmtEdit] = useState(""); // 승반고사 코멘트 편집
   const [progOverride, setProgOverride] = useState({}); // 학생별 진도 오버라이드 {인덱스: "수정된 진도내용"}
   const [editIdx, setEditIdx] = useState(-1); // 편집 중인 진도 인덱스 (-1이면 편집 없음)
+  const [presets, setPresets] = useState({}); // 저장된 반 프리셋 목록
+  const [showCmtHistory, setShowCmtHistory] = useState(false); // 이전 코멘트 열람 패널
+  const [genSec, setGenSec] = useState(0); // AI 생성 경과 초
   const fileRef = useRef();
+  const restoreRef = useRef(); // 백업 JSON 복원용 파일 입력
+
+  // 앱 시작 시: 저장된 반 프리셋 로딩 + 마지막 사용 반 자동 복원
+  useEffect(() => {
+    const all = getPresets();
+    setPresets(all);
+    try {
+      const last = localStorage.getItem(LAST_CLASS_KEY);
+      if (last && all[last]) {
+        const p = all[last];
+        setCls(last);
+        setTchr(p.tchr || "");
+        if (Array.isArray(p.cats) && p.cats.length) {
+          setCats(p.cats);
+          setCg(Array.isArray(p.cg) && p.cg.length === p.cats.length ? p.cg : p.cats.map(() => "A"));
+        }
+      }
+    } catch { /* 복원 실패 시 빈 상태로 시작 */ }
+  }, []);
+
+  // AI 생성 중 경과 시간 표시
+  useEffect(() => {
+    if (step !== "generating") { setGenSec(0); return; }
+    const t = setInterval(() => setGenSec(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, [step]);
+
+  // 프리셋 불러오기 (반 전환)
+  const loadPreset = (clsName) => {
+    const p = getPresets()[clsName];
+    if (!p) return;
+    setCls(clsName);
+    setTchr(p.tchr || "");
+    if (Array.isArray(p.cats) && p.cats.length) {
+      setCats(p.cats);
+      setCg(Array.isArray(p.cg) && p.cg.length === p.cats.length ? p.cg : p.cats.map(() => "A"));
+    }
+    setProgOverride({}); setEditIdx(-1); // 반이 바뀌면 학생별 개별 진도는 초기화
+    try { localStorage.setItem(LAST_CLASS_KEY, clsName); } catch { }
+  };
 
   const syncGrades = cats.map((_, i) => cg[i] || "A");
   // 실제 사용할 진도 내용 (오버라이드 있으면 그것, 없으면 반 공통)
@@ -265,7 +402,7 @@ export default function App() {
     const progressText = progressLines.join("\n");
     // prompt를 일반 문자열 합치기로 (백틱 안에 백틱 들어가면 GitHub가 깨뜨림)
     const photoAnaInst = hp
-      ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[필수 어조 - 매우 중요]\\n모든 문장을 반드시 '~입니다', '~합니다', '~됩니다', '~보입니다' 같은 격식체(하십시오체)로 작성합니다.\\n절대 금지: '~해요', '~예요', '~이에요', '~네요', '~군요', '~돼요' 같은 해요체 어미 사용 금지.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문을 다룬 학습 내용입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이므로 함께 다져나가겠습니다.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n다음 달, 다음 학습, 향후, 앞으로 배울, 앞으로 학습할, 다음에 배울, 다음에 학습할, 다음 단원, 다음 챕터\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않으며, 다음 달이나 앞으로 배울 내용에 대해서도 절대 언급하지 않습니다. 오직 현재 학습한 내용과 이해도만 분석하며, 반드시 격식체(~입니다)로 작성합니다."
+      ? "당신은 시험·과제 분석 전문가입니다. " + first + " 학생의 학습물을 보고 아래 형식으로 분석을 작성하세요.\\n\\n[필수 어조 - 매우 중요]\\n모든 문장을 반드시 '~입니다', '~합니다', '~됩니다', '~보입니다' 같은 격식체(하십시오체)로 작성합니다.\\n절대 금지: '~해요', '~예요', '~이에요', '~네요', '~군요', '~돼요' 같은 해요체 어미 사용 금지.\\n\\n[문법 주제 판독 원칙 - 최우선, 위반 시 학부모 항의 발생]\\n반드시 사진 속 문항·지시문·예문을 한 문항씩 실제로 읽고, 거기에서 직접 확인한 문법 주제만 언급합니다.\\n문항에서 확인되지 않은 문법 주제명을 추측해서 쓰는 것을 절대 금지합니다. 커리큘럼 목록에 있는 주제라는 이유로 골라 쓰면 안 됩니다.\\n판단이 애매하면 [이번 달 학습 진도]에 기재된 주제와 대조해 일치하는 쪽으로 서술하고, 그래도 불확실하면 특정 문법 용어를 새로 만들지 말고 진도 내용에 적힌 표현을 그대로 사용합니다.\\n\\n[작성 형식 - 정확히 이 순서, 4~5문장, 250자 내외]\\n① 무엇을 시험·학습한 자료인지 (예: 'be동사 의문문과 현재진행형 작문을 다룬 학습 내용입니다.') - 1문장\\n② 잘한 부분/이해한 개념 - 구체적 문법 용어로 (예: '명사+be동사 일치는 안정적으로 처리하고 있습니다.') - 1~2문장\\n③ 약한 부분/보강 필요 개념 - 구체적 진단 (예: '복수 주어와 be동사 활용에서 일부 혼동이 보입니다.') - 1~2문장\\n④ 격려·응원 한마디 (예: '꾸준한 연습으로 충분히 극복할 수 있는 부분이므로 함께 다져나가겠습니다.') - 1문장\\n\\n[절대 금지 - 한 단어라도 들어가면 안 됨]\\n사진, 첨부, 노트, 필기, 문제지, 활동지, 시험지, 과제물, 자료에는, 자료를 보면, 첨부 자료, 첨부된\\n빨간, 빨간색, 빨간 펜, 빨간펜, 빨간 원, 빨간색 원, 동그라미, 체크, 체크되어, 표시되어, 표시한, 채점\\n복습 흔적, 학습 흔적, 흔적, 표시되어 있, 정리한 흔적, 정리해놓은\\n학생이 ~한, 스스로 표시, 스스로 체크, 자기주도\\n다음 달, 다음 학습, 향후, 앞으로 배울, 앞으로 학습할, 다음에 배울, 다음에 학습할, 다음 단원, 다음 챕터\\n\\n자료의 외관·표시·채점에 대해서는 한 글자도 쓰지 않으며, 다음 달이나 앞으로 배울 내용에 대해서도 절대 언급하지 않습니다. 오직 현재 학습한 내용과 이해도만 분석하며, 반드시 격식체(~입니다)로 작성합니다."
       : "";
 
     // 학생 이전 코멘트 이력 가져오기 (중복 방지용)
@@ -296,6 +433,7 @@ export default function App() {
     promptParts.push("- 첨부된 자료는 선생님이 이미 채점을 마친 " + first + " 학생의 결과물입니다. 자료 자체나 채점 표시(빨간 원·체크 등)는 절대 언급하지 마세요.");
     promptParts.push("- photoAnalysis는 자료를 보고 '" + first + " 학생이 어떤 개념을 정확히 이해하고 있고, 어떤 개념이 약한지'만 자연스럽게 진단합니다.");
     promptParts.push("- '사진', '문제지', '빨간 원', '체크', '표시' 같은 메타 표현은 photoAnalysis에서 절대 사용하지 마세요. 이 단어가 하나라도 들어가면 안 됩니다.");
+    promptParts.push("- ★photoAnalysis의 문법 주제는 첨부 자료의 문항을 실제로 읽고 확인한 것만 언급하세요. 자료와 다른 주제를 쓰는 것(예: 자료는 동명사·관계대명사인데 비교급·최상급이라고 서술)은 절대 금지입니다. 확신이 없으면 [이번 달 학습 진도]에 기재된 주제를 따르세요.");
     promptParts.push("");
     promptParts.push("[학생 정보]");
     promptParts.push("이름: " + name + " / 성 제외 호칭: " + first);
@@ -346,7 +484,7 @@ export default function App() {
     promptParts.push("}");
     const prompt = promptParts.join("\n");
     const mc = hp ? [...pc, { type: "text", text: prompt }] : prompt;
-    const tryModels = ["claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-sonnet-4-6", "claude-opus-4-6", "claude-haiku-4-5", "claude-3-5-sonnet-latest"];
+    const tryModels = ["claude-sonnet-5", "claude-sonnet-4-5", "claude-sonnet-4-5-20250929", "claude-opus-4-8", "claude-haiku-4-5", "claude-3-5-sonnet-latest"];
     let lastErr = "";
     let firstErr = "";
     // 페이로드 크기 사전 체크 (Vercel 4.5MB 제한)
@@ -448,20 +586,15 @@ export default function App() {
     setTimeout(() => URL.revokeObjectURL(url), 3000);
   };
 
-  const doShare = () => {
+  const doShare = async () => {
     const d = rpt;
     const finalAnal = analEdit.length ? analEdit : (d.anal || []);
     const examTxt = [];
     if (d.exam1On) { examTxt.push(`📊월간성취도모의고사: ${d.exam1Grade}등급`); if (exam1CmtEdit) examTxt.push(`  ${exam1CmtEdit}`); }
     if (d.exam2On) { examTxt.push(`🎯승반고사: ${d.exam2Grade}등급`); if (exam2CmtEdit) examTxt.push(`  ${exam2CmtEdit}`); }
-    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...finalAnal.map(a => `·${a.label}(${a.grade}):${a.detail}`), examTxt.length ? "\n📝시험결과\n" + examTxt.join("\n") : "", "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨"].filter(Boolean).join("\n");
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = txt;
-      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0.01;width:1px;height:1px;";
-      document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
-      alert("복사됐어요! 카카오톡에 붙여넣기 하세요 😊");
-    } catch { alert("복사 실패"); }
+    const txt = ["【와튼영어스쿨 월말 리포트】", "━━━━━━━━", `📌${d.name}|${d.cls}|${d.tchr}선생님|${d.month}`, "", "📚학습진도", ...d.cats.map(c => `·[${c.cat}]${c.cont}▶${c.grade}`), "", "📊분석", ...finalAnal.map(a => `·${a.label}(${a.grade}):${a.detail}`), examTxt.length ? "\n📝시험결과\n" + examTxt.join("\n") : "", "", `📝태도:${d.att}|과제:${d.hw}`, "", "💬코멘트", cmt, paEdit ? "\n📸결과물 분석\n" + paEdit : "", "━━━━━━━━", "와튼영어스쿨", "💬 궁금한 점은 언제든 상담 신청: " + CONSULT_URL].filter(Boolean).join("\n");
+    const ok = await copyText(txt);
+    alert(ok ? "복사됐어요! 카카오톡에 붙여넣기 하세요 😊" : "복사 실패 — 브라우저 권한을 확인해주세요.");
   };
 
   const doJpg = async (format = "jpeg", scale = 3) => {
@@ -574,7 +707,20 @@ export default function App() {
           </div>
         </div>
         <h3 style={{ color: N, margin: "0 0 4px", fontSize: 14, fontWeight: 800, textAlign: "center" }}>📌 반 공통 정보 설정</h3>
-        <p style={{ color: "#aaa", fontSize: 11, marginBottom: 14, textAlign: "center" }}>한 번 저장하면 고정됩니다.</p>
+        <p style={{ color: "#aaa", fontSize: 11, marginBottom: 14, textAlign: "center" }}>저장하면 이 기기에 자동 보관됩니다 — 다음에 켜도 그대로!</p>
+        {Object.keys(presets).length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 11, color: "#666", fontWeight: 700, display: "block", marginBottom: 5 }}>💾 저장된 반 불러오기</label>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {Object.keys(presets).sort().map(k => (
+                <span key={k} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: cls === k ? "#fff8e7" : "#fafaf8", border: `1.5px solid ${cls === k ? G : "#e0ddd5"}`, borderRadius: 16, padding: "4px 6px 4px 12px" }}>
+                  <button onClick={() => loadPreset(k)} style={{ background: "none", border: "none", fontSize: 11, fontWeight: cls === k ? 800 : 600, color: cls === k ? N : "#666", cursor: "pointer", padding: 0 }}>{k}</button>
+                  <button onClick={() => { if (window.confirm(`'${k}' 반 프리셋을 삭제할까요?\n(학생 코멘트·모의고사 이력은 유지됩니다)`)) { deletePreset(k); setPresets(getPresets()); } }} title="프리셋 삭제" style={{ background: "#f0f0f0", border: "none", borderRadius: "50%", width: 16, height: 16, fontSize: 9, color: "#999", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>✕</button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
           <div><label style={{ fontSize: 11, color: "#666", display: "block", marginBottom: 4 }}>반 (CLASS)</label><input style={inp} placeholder="예: M1" value={cls} onChange={e => setCls(e.target.value)} /></div>
           <div><label style={{ fontSize: 11, color: "#666", display: "block", marginBottom: 4 }}>담당 선생님</label><input style={inp} placeholder="예: Alice" value={tchr} onChange={e => setTchr(e.target.value)} /></div>
@@ -583,7 +729,7 @@ export default function App() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
             <label style={{ fontSize: 11, color: "#666", fontWeight: 700 }}>📚 학습 진도 항목</label>
-            <button onClick={() => { setCats(c => [...c, { cat: "", cont: "" }]); setCg(g => [...g, "A"]); }} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>+ 추가</button>
+            <button onClick={() => { setCats(c => [...c, { cat: "", cont: "" }]); setCg(g => [...g, "A"]); setProgOverride({}); setEditIdx(-1); }} style={{ fontSize: 10, color: G, background: "none", border: `1px solid ${G}`, borderRadius: 5, padding: "2px 7px", cursor: "pointer" }}>+ 추가</button>
           </div>
           <div style={{ background: "#fafaf8", borderRadius: 6, padding: 9 }}>
             {cats.map((c, i) => (
@@ -593,14 +739,27 @@ export default function App() {
                     <option value="">카테고리 선택</option>
                     {CATS.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
-                  {i > 0 && <button onClick={() => { setCats(cs => cs.filter((_, j) => j !== i)); setCg(gs => gs.filter((_, j) => j !== i)); }} style={{ background: "#fee2e2", border: "none", borderRadius: 5, padding: "5px 9px", color: "#c00", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>✕</button>}
+                  {i > 0 && <button onClick={() => { setCats(cs => cs.filter((_, j) => j !== i)); setCg(gs => gs.filter((_, j) => j !== i)); setProgOverride({}); setEditIdx(-1); }} style={{ background: "#fee2e2", border: "none", borderRadius: 5, padding: "5px 9px", color: "#c00", fontSize: 11, cursor: "pointer", flexShrink: 0 }}>✕</button>}
                 </div>
                 <textarea value={c.cont} onChange={e => setCats(cs => cs.map((x, j) => j === i ? { ...x, cont: e.target.value } : x))} style={{ ...inp, minHeight: 52, fontSize: 11, resize: "vertical" }} placeholder="진도 내용을 입력하세요..." />
               </div>
             ))}
           </div>
         </div>
-        <button onClick={() => { if (!cls || !tchr) { alert("반과 선생님을 입력해주세요."); return; } if (!cats.some(c => c.cat && c.cont.trim())) { alert("학습 진도를 최소 1개 입력해주세요."); return; } setStep("form"); }} style={{ width: "100%", padding: 14, background: `linear-gradient(145deg, #2a4578, #1e3460)`, color: "#fff", border: `2px solid ${G}`, borderRadius: 12, fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: `0 5px 14px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.2)`, transition: "all 0.12s" }} onMouseDown={e => e.currentTarget.style.transform = "translateY(2px)"} onMouseUp={e => e.currentTarget.style.transform = "translateY(0)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>저장하고 시작하기 →</button>
+        <button onClick={() => { if (!cls || !tchr) { alert("반과 선생님을 입력해주세요."); return; } if (!cats.some(c => c.cat && c.cont.trim())) { alert("학습 진도를 최소 1개 입력해주세요."); return; } savePreset(cls, { tchr, cats, cg }); setPresets(getPresets()); setStep("form"); }} style={{ width: "100%", padding: 14, background: `linear-gradient(145deg, #2a4578, #1e3460)`, color: "#fff", border: `2px solid ${G}`, borderRadius: 12, fontSize: 13, fontWeight: 900, cursor: "pointer", boxShadow: `0 5px 14px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.2)`, transition: "all 0.12s" }} onMouseDown={e => e.currentTarget.style.transform = "translateY(2px)"} onMouseUp={e => e.currentTarget.style.transform = "translateY(0)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>저장하고 시작하기 →</button>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginTop: 10 }}>
+          <button onClick={() => { if (exportAllData()) alert("✅ 백업 파일이 다운로드됐어요.\n다른 PC에서 '복원'으로 불러오면 이력이 그대로 옮겨집니다."); else alert("백업 실패"); }} style={{ padding: 8, background: "#fff", color: "#666", border: "1px solid #ddd", borderRadius: 8, fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}>📤 이력 백업 (JSON)</button>
+          <button onClick={() => restoreRef.current.click()} style={{ padding: 8, background: "#fff", color: "#666", border: "1px solid #ddd", borderRadius: 8, fontSize: 10.5, fontWeight: 700, cursor: "pointer" }}>📥 이력 복원</button>
+          <input ref={restoreRef} type="file" accept="application/json,.json" style={{ display: "none" }} onChange={async e => {
+            const f = e.target.files && e.target.files[0];
+            e.target.value = "";
+            if (!f) return;
+            const r = await importAllData(f);
+            alert((r.ok ? "✅ " : "⚠️ ") + r.msg);
+            if (r.ok) setPresets(getPresets());
+          }} />
+        </div>
+        <p style={{ fontSize: 9.5, color: "#bbb", textAlign: "center", marginTop: 6, lineHeight: 1.5 }}>코멘트 이력·모의고사 추이·반 프리셋은 이 기기 브라우저에 저장됩니다.<br />PC를 바꾸거나 브라우저를 초기화하기 전에 백업해 두세요.</p>
       </div>
     </div>
   );
@@ -693,11 +852,22 @@ export default function App() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: N }}>💬 코멘트 키워드 <span style={{ fontWeight: 400, color: "#aaa" }}>(선택, 특정 학생만)</span></label>
               {name.trim() && getCmtHistory(name).length > 0 && (
-                <span style={{ fontSize: 9, color: G, fontWeight: 700, background: "#fff8e7", border: `1px solid ${G}`, borderRadius: 4, padding: "2px 6px" }}>
-                  📚 이전 코멘트 {getCmtHistory(name).length}개월 기록 보유
-                </span>
+                <button onClick={() => setShowCmtHistory(v => !v)} style={{ fontSize: 9, color: G, fontWeight: 700, background: "#fff8e7", border: `1px solid ${G}`, borderRadius: 4, padding: "2px 6px", cursor: "pointer" }}>
+                  📚 이전 코멘트 {getCmtHistory(name).length}개월 {showCmtHistory ? "▲ 닫기" : "▼ 보기"}
+                </button>
               )}
             </div>
+            {showCmtHistory && name.trim() && getCmtHistory(name).length > 0 && (
+              <div style={{ border: `1px solid ${G}`, borderRadius: 7, background: "#fffdf5", padding: "8px 10px", marginBottom: 8, maxHeight: 220, overflowY: "auto" }}>
+                {getCmtHistory(name).slice().reverse().map((h, i) => (
+                  <div key={i} style={{ borderBottom: i < getCmtHistory(name).length - 1 ? "1px dashed #e8dfc8" : "none", padding: "6px 0" }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: N, marginBottom: 3 }}>📅 {h.month}</div>
+                    <div style={{ fontSize: 10.5, color: "#555", lineHeight: 1.6, whiteSpace: "pre-line" }}>{h.comment}</div>
+                  </div>
+                ))}
+                <div style={{ fontSize: 9, color: "#aaa", marginTop: 4 }}>💡 AI가 이 내용과 겹치지 않게 새 코멘트를 작성합니다.</div>
+              </div>
+            )}
             <textarea
               value={cmtKeywords}
               onChange={e => setCmtKeywords(e.target.value)}
@@ -777,14 +947,14 @@ export default function App() {
           </div>
           {err && <div style={{ background: "#fff0f0", border: "1px solid #fcc", borderRadius: 7, padding: "8px 11px", color: "#c00", fontSize: 11, marginBottom: 10, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>⚠️ {err}</div>}
           <button onClick={doGen} disabled={isG} style={{ width: "100%", padding: 15, background: isG ? "#aaa" : `linear-gradient(145deg, #d4b75e, #b8983f)`, color: "#fff", border: isG ? "2px solid #999" : "2px solid #e8d178", borderRadius: 12, fontSize: 14, fontWeight: 900, cursor: isG ? "not-allowed" : "pointer", boxShadow: isG ? "none" : `0 5px 14px rgba(0,0,0,0.25), inset 0 1px 2px rgba(255,255,255,0.6)`, textShadow: isG ? "none" : "0 1px 2px rgba(120,90,30,0.5)", transition: "all 0.12s" }} onMouseDown={e => { if (!isG) e.currentTarget.style.transform = "translateY(2px)"; }} onMouseUp={e => e.currentTarget.style.transform = "translateY(0)"} onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}>
-            {isG ? "⏳ AI 분석 중... (30초~1분 소요)" : "✨ 월말 리포트 생성하기 →"}
+            {isG ? `⏳ AI 분석 중... ${genSec}초 경과 (보통 30초~1분)` : "✨ 월말 리포트 생성하기 →"}
           </button>
           <button onClick={async () => {
             try {
               const res = await fetch("/api/generate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ model: "claude-sonnet-4-5", max_tokens: 50, messages: [{ role: "user", content: "안녕" }] })
+                body: JSON.stringify({ model: "claude-haiku-4-5", max_tokens: 50, messages: [{ role: "user", content: "안녕" }] })
               });
               const data = await res.json();
               alert("🔬 API 진단 결과\n\n상태코드: " + res.status + "\n\n응답: " + JSON.stringify(data, null, 2).slice(0, 800));
@@ -835,12 +1005,13 @@ export default function App() {
     return (
       <div style={{ fontFamily: "'Malgun Gothic','Apple SD Gothic Neo',sans-serif", background: "#f0ede5", minHeight: "100vh", padding: "12px 0 32px" }}>
         <div style={{ maxWidth: 720, margin: "0 auto 6px", display: "flex", gap: 5, padding: "0 8px", flexWrap: "wrap", alignItems: "center" }}>
-          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setCmtKeywords(""); setExamType("none"); setExam1Grade("A"); setExam1Fb(""); setExam2Grade("A"); setExam2Fb(""); setExam1CmtEdit(""); setExam2CmtEdit(""); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
+          <button onClick={() => { setName(""); setAtt("A+"); setHw("A+"); setCg(cats.map(() => "A")); setPhotos([]); setReportPhotos([]); setProgOverride({}); setEditIdx(-1); setCmtKeywords(""); setExamType("none"); setExam1Grade("A"); setExam1Fb(""); setExam2Grade("A"); setExam2Fb(""); setExam1CmtEdit(""); setExam2CmtEdit(""); setShowCmtHistory(false); setStep("form"); }} style={{ padding: "6px 12px", background: "#fff", border: "1.5px solid #ccc", borderRadius: 7, fontSize: 11, cursor: "pointer" }}>← 다음 학생</button>
           <button onClick={() => setStep("setup")} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${G}`, borderRadius: 7, fontSize: 11, color: G, cursor: "pointer" }}>반 정보 수정</button>
           <button onClick={doPrint} style={{ padding: "6px 12px", background: N, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖨️ HTML 저장 후 인쇄</button>
           <button onClick={() => doJpg("png", 3)} style={{ padding: "6px 12px", background: "#1565c0", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>🖼️ PNG 다운로드 (선명함)</button>
           <button onClick={() => doJpg("jpeg", 3)} style={{ padding: "6px 12px", background: "#2e7d32", border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>📷 JPG 다운로드</button>
           <button onClick={doShare} style={{ padding: "6px 12px", background: G, border: "none", borderRadius: 7, fontSize: 11, color: "#fff", fontWeight: 700, cursor: "pointer" }}>📋 텍스트 복사</button>
+          <button onClick={() => { if (window.confirm("같은 입력으로 AI 분석을 다시 실행할까요?\n(현재 리포트에서 직접 수정한 내용은 사라집니다)")) doGen(); }} style={{ padding: "6px 12px", background: "#fff", border: `1.5px solid ${WINE}`, borderRadius: 7, fontSize: 11, color: WINE, fontWeight: 700, cursor: "pointer" }}>🔁 AI 다시 생성</button>
         </div>
         <div style={{ maxWidth: 720, margin: "0 auto 5px", padding: "0 8px" }}>
           <div style={{ background: "#f0f6ff", border: "1px solid #c5d8f5", borderRadius: 6, padding: "6px 11px", fontSize: 11, color: "#4060a0" }}>
