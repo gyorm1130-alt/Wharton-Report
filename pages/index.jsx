@@ -92,6 +92,24 @@ function importAllData(file) {
   });
 }
 
+// AI 응답 JSON 복구 파서: 문자열 값 안에 실제 줄바꿈 등 제어문자가 들어와도 이스케이프해서 파싱
+// ("Bad control character in string literal" 오류 방지 — 코멘트에 줄바꿈을 요구하므로 자주 발생)
+function safeParseJSON(s) {
+  try { return JSON.parse(s); } catch { /* 아래에서 복구 시도 */ }
+  let out = "", inStr = false, esc = false;
+  for (const ch of s) {
+    if (esc) { out += ch; esc = false; continue; }
+    if (inStr && ch === "\\") { out += ch; esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; out += ch; continue; }
+    if (inStr && ch === "\n") { out += "\\n"; continue; }
+    if (inStr && ch === "\r") { out += "\\r"; continue; }
+    if (inStr && ch === "\t") { out += "\\t"; continue; }
+    if (inStr && ch.charCodeAt(0) < 32) { out += " "; continue; }
+    out += ch;
+  }
+  return JSON.parse(out);
+}
+
 // 클립보드 복사 (최신 Clipboard API 우선, 구형 브라우저 폴백)
 async function copyText(txt) {
   try {
@@ -470,7 +488,7 @@ export default function App() {
     }
     const hasExam = exam1On || exam2On;
 
-    promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지):");
+    promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지). JSON 문자열 값 안에서 줄바꿈이 필요하면 반드시 \\n 이스케이프 문자를 사용하고, 실제 줄바꿈 문자를 그대로 넣지 마세요:");
     promptParts.push("{");
     promptParts.push('  "analysisItems": [');
     promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"' + strengthGrade + '"},');
@@ -541,7 +559,7 @@ export default function App() {
       let raw = (data.content || []).map(b => b.type === "text" ? b.text : "").join("");
       const fi = raw.indexOf("{"), la = raw.lastIndexOf("}");
       if (fi === -1 || la === -1) throw new Error("JSON없음");
-      const p = JSON.parse(raw.slice(fi, la + 1));
+      const p = safeParseJSON(raw.slice(fi, la + 1));
       // 사진 분석 결과 후처리: 금지어 포함 시 안전한 형태로 정제
       let safePA = hp ? (p.photoAnalysis || "") : "";
       if (safePA) {
