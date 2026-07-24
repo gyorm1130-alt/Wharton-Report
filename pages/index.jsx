@@ -536,7 +536,9 @@ export default function App() {
       const callModels = async () => {
       let data = null;
       for (const model of tryModels) {
-        const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
+        // thinking disabled 필수: claude-sonnet-5는 기본이 사고모드라 max_tokens를 사고에 소모하면 텍스트가 비어 "JSON없음" 오류 발생 (2026-07-24 확인)
+        // max_tokens 4000: 최신 토크나이저는 같은 한국어도 토큰을 ~30% 더 사용 — 2000이면 코멘트+분석 JSON이 잘릴 수 있음
+        const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, max_tokens: 4000, thinking: { type: "disabled" }, messages: [{ role: "user", content: mc }] }) });
         if (res.ok) { data = await res.json(); break; }
         let detail = "";
         let fullJson = null;
