@@ -97,16 +97,34 @@ function importAllData(file) {
 function safeParseJSON(s) {
   try { return JSON.parse(s); } catch { /* 아래에서 복구 시도 */ }
   let out = "", inStr = false, esc = false;
-  for (const ch of s) {
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
     if (esc) { out += ch; esc = false; continue; }
     if (inStr && ch === "\\") { out += ch; esc = true; continue; }
-    if (ch === '"') { inStr = !inStr; out += ch; continue; }
+    if (ch === '"') {
+      if (!inStr) { inStr = true; out += ch; continue; }
+      // 문자열 안에서 만난 큰따옴표: 진짜 닫는 따옴표인지, AI가 문장 안에 넣은 인용부호인지 판별
+      let j = i + 1;
+      while (j < s.length && (s[j] === " " || s[j] === "\n" || s[j] === "\r" || s[j] === "\t")) j++;
+      const nx = s[j];
+      if (nx === undefined || nx === "}" || nx === "]" || nx === ":") { inStr = false; out += ch; continue; }
+      if (nx === ",") {
+        // 콤마 뒤가 JSON 토큰 시작(다음 키/값)이면 닫는 따옴표, 한글 등 일반 문장이면 내부 인용부호
+        let k = j + 1;
+        while (k < s.length && (s[k] === " " || s[k] === "\n" || s[k] === "\r" || s[k] === "\t")) k++;
+        const nx2 = s[k];
+        if (nx2 === undefined || '"{[-0123456789tfn}'.indexOf(nx2) >= 0) { inStr = false; out += ch; continue; }
+      }
+      out += '\\"'; // 내부 인용부호로 판단 → 이스케이프해서 문자열 유지
+      continue;
+    }
     if (inStr && ch === "\n") { out += "\\n"; continue; }
     if (inStr && ch === "\r") { out += "\\r"; continue; }
     if (inStr && ch === "\t") { out += "\\t"; continue; }
     if (inStr && ch.charCodeAt(0) < 32) { out += " "; continue; }
     out += ch;
   }
+  out = out.replace(/,\s*([}\]])/g, "$1"); // 후행 콤마 제거
   return JSON.parse(out);
 }
 
@@ -488,7 +506,7 @@ export default function App() {
     }
     const hasExam = exam1On || exam2On;
 
-    promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지). JSON 문자열 값 안에서 줄바꿈이 필요하면 반드시 \\n 이스케이프 문자를 사용하고, 실제 줄바꿈 문자를 그대로 넣지 마세요:");
+    promptParts.push("순수 JSON만 출력 (마크다운 코드블록 금지). JSON 문자열 값 안에서 줄바꿈이 필요하면 반드시 \\n 이스케이프 문자를 사용하고, 실제 줄바꿈 문자를 그대로 넣지 마세요. 문자열 값 안에 큰따옴표(\")를 절대 넣지 말고, 인용·강조가 필요하면 작은따옴표(')만 사용하세요:");
     promptParts.push("{");
     promptParts.push('  "analysisItems": [');
     promptParts.push('    {"label":"학습 강점","detail":"진도 평가 등급을 근거로 잘하는 영역과 그 이유를 2문장(반드시 격식체 ~입니다 어미 사용, ~해요 금지, 다음 달이나 향후 계획 언급 금지)","grade":"' + strengthGrade + '"},');
@@ -514,6 +532,8 @@ export default function App() {
       setErr(msg); alert(msg); setStep("form"); return;
     }
     try {
+      // 모델 폴백 호출을 함수로 분리 (JSON 파싱 실패 시 재요청에 재사용)
+      const callModels = async () => {
       let data = null;
       for (const model of tryModels) {
         const res = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ model, max_tokens: 2000, messages: [{ role: "user", content: mc }] }) });
@@ -556,10 +576,23 @@ export default function App() {
         if (![404, 400].includes(res.status)) break;
       }
       if (!data) throw new Error(firstErr || lastErr || "모든 모델 호출 실패");
-      let raw = (data.content || []).map(b => b.type === "text" ? b.text : "").join("");
-      const fi = raw.indexOf("{"), la = raw.lastIndexOf("}");
-      if (fi === -1 || la === -1) throw new Error("JSON없음");
-      const p = safeParseJSON(raw.slice(fi, la + 1));
+      return data;
+      };
+      // AI 응답이 깨진 JSON이면 복구 파서로 살리고, 그래도 안 되면 자동으로 1회 재요청 (수동 재클릭 불필요)
+      let p = null;
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        const data = await callModels();
+        const raw = (data.content || []).map(b => b.type === "text" ? b.text : "").join("");
+        const fi = raw.indexOf("{"), la = raw.lastIndexOf("}");
+        try {
+          if (fi === -1 || la === -1) throw new Error("JSON없음");
+          p = safeParseJSON(raw.slice(fi, la + 1));
+          break;
+        } catch (pe) {
+          console.warn(`AI 응답 JSON 파싱 실패 (${attempt}차):`, pe.message, raw.slice(0, 300));
+          if (attempt === 2) throw new Error("AI 응답 형식 오류 — 자동 재시도까지 실패했습니다. 생성 버튼을 다시 눌러주세요. (" + pe.message + ")");
+        }
+      }
       // 사진 분석 결과 후처리: 금지어 포함 시 안전한 형태로 정제
       let safePA = hp ? (p.photoAnalysis || "") : "";
       if (safePA) {
